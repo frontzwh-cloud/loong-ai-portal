@@ -67,6 +67,6 @@ A user can:
 
 ## Next Work
 
-Create and execute the first implementation Issue for AI Chat Portal V0.1.
+Implementation authority is GitHub Issue `frontzwh-cloud/loong-ai-portal#1`.
 
-The earlier planning Issue in `frontzwh-cloud/loong-ai-meeting-assistant#152` is superseded by this new project and should not be implemented in the Meeting Assistant repository.
+The earlier planning Issue in `frontzwh-cloud/loong-ai-meeting-assistant#152` is superseded by this new project and must not be implemented in the Meeting Assistant repository.
