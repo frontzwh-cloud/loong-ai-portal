@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 from typing import AsyncIterator
 
 import httpx
@@ -9,7 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-load_dotenv()
+ENV_PATH = Path(__file__).resolve().parent / ".env"
+load_dotenv(ENV_PATH)
 
 app = FastAPI(title="LOONG AI Portal API")
 app.add_middleware(
