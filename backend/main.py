@@ -32,12 +32,18 @@ def event(kind: str, content: str = "") -> str:
 async def stream_chat(messages: list[dict[str, str]]) -> AsyncIterator[str]:
     api_key = os.getenv("DEEPSEEK_API_KEY")
     base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com").rstrip("/")
-    model = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+    model = os.getenv("DEEPSEEK_MODEL", "deepseek-v4-flash")
     if not api_key:
         yield event("error", "尚未配置 DEEPSEEK_API_KEY。请在 backend/.env 中配置后重试。")
         return
 
-    payload = {"model": model, "messages": messages, "stream": True}
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": True,
+        "reasoning_effort": "high",
+        "extra_body": {"thinking": {"type": "enabled"}},
+    }
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     try:
         async with httpx.AsyncClient(timeout=httpx.Timeout(90.0, connect=10.0)) as client:
@@ -78,4 +84,3 @@ async def health() -> dict[str, str]:
 @app.post("/api/chat")
 async def chat(request: ChatRequest) -> StreamingResponse:
     return StreamingResponse(stream_chat(request.messages), media_type="application/x-ndjson")
-
