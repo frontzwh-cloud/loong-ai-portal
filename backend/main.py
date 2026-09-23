@@ -46,7 +46,7 @@ async def stream_chat(messages: list[dict[str, str]]) -> AsyncIterator[str]:
     }
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     try:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(90.0, connect=10.0)) as client:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(90.0, connect=10.0), verify=False) as client:
             async with client.stream("POST", f"{base_url}/v1/chat/completions", json=payload, headers=headers) as response:
                 if response.status_code >= 400:
                     detail = (await response.aread()).decode("utf-8", errors="replace")
