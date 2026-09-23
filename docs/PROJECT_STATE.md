@@ -1,7 +1,7 @@
 # LOONG AI Portal — Current State
 
 UPDATED = 2026-09-23
-STATUS = BOOTSTRAPPED
+STATUS = DEMO_SPRINT_ACTIVE
 
 ## Objective
 
@@ -67,6 +67,8 @@ A user can:
 
 ## Next Work
 
-Implementation authority is GitHub Issue `frontzwh-cloud/loong-ai-portal#1`.
+Immediate execution authority is GitHub Issue `frontzwh-cloud/loong-ai-portal#2` (2-hour demo sprint).
+
+Parent V0.1 implementation scope remains tracked by GitHub Issue `frontzwh-cloud/loong-ai-portal#1`.
 
 The earlier planning Issue in `frontzwh-cloud/loong-ai-meeting-assistant#152` is superseded by this new project and must not be implemented in the Meeting Assistant repository.
