@@ -10,6 +10,7 @@ The `prototype/react-assistant-ui` branch is a **frontend UX proof of concept**:
 - ChatGPT-inspired minimal homepage with the user-provided 龙小智 mascot displayed in the greeting, assistant avatar and sidebar. The original transparent PNG is kept unchanged in `frontend/public/loong-ai-mascot.png`.
 - Assistant-style chat with streamed answer and separately collapsible provider reasoning (only if returned).
 - Chat-first Quick Launch with three featured AI applications and three compact office-service links; names and availability come from the same catalog as the searchable service directory.
+- Compact "应用" control inside the chat composer opens the service directory without clearing the conversation; home layout gives more room to the supplied mascot and quick-launch actions.
 - Searchable AI applications, office services, and download directory. Windows AI applications appear in both the AI and Download filters.
 - A **simulated** AI Presentation conversation / right-hand Canvas for visual review. It does not call or modify the real AI Presentation application and cannot generate PPTX.
 

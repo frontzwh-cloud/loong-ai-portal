@@ -74,4 +74,17 @@ describe('LOONG AI Portal UI prototype', () => {
     fireEvent.click(screen.getByRole('button', { name: '查看服务' }))
     expect(screen.getByText('探索工作所需的一切')).toBeTruthy()
   })
+
+  it('opens the application directory from the composer and retains chat context', async () => {
+    render(<App />)
+    fireEvent.change(screen.getByPlaceholderText('向龙小智提问，或描述你想完成的工作...'), {
+      target: { value: '我想看一下产线 OEE' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '发送消息' }))
+    await waitFor(() => expect(screen.getByText('应用推荐 · 关键词演示')).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: '打开应用中心' }))
+    expect(screen.getByText('探索工作所需的一切')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: '龙小智助手' }))
+    expect(screen.getByText('应用推荐 · 关键词演示')).toBeTruthy()
+  })
 })

@@ -16,6 +16,7 @@ Validate that the existing lightweight Portal can adopt the same React + `@assis
 4. Presentation: **UI-only simulated** storyboard / slide preview Canvas. It opens from a PPT-intent demo prompt or app directory and supports local page switching. It does not create, edit or download a real PPT.
 5. A standalone frontend build, UI smoke tests, and a small screen layout.
 6. The empty chat homepage adds a restrained two-tier Quick Launch: three featured AI applications as action cards and three office tools as compact links. It reads the existing catalog without creating a second app registry, and respects unconfigured URL states. AI/office categorization is distinct from web/Windows delivery, so Meeting Assistant appears in both AI Apps and Download Center.
+7. A small “应用” control in the chat composer opens the service directory without resetting the active conversation, so tools remain discoverable after the empty-state Quick Launch disappears.
 
 ## Out of scope / must not be inferred
 
@@ -36,8 +37,9 @@ Validate that the existing lightweight Portal can adopt the same React + `@assis
 5. Click an unconfigured app: the action stays disabled and does not navigate to a guessed URL.
 6. Ask `我想看一下产线 OEE`: a transparently labeled local rule recommends Gemba in the conversation; without an internal URL the user can only view the directory.
 7. With backend configured, verify streamed chat and separate reasoning only if returned. Without backend, demo navigation still works.
-8. On a narrow viewport, navigation is an overlay, Quick Launch cards reflow to two columns, and Canvas remains accessible as an overlay.
+8. From an active chat, use the composer “应用” button to browse services and return to chat; previous conversation state is preserved.
+9. On a narrow viewport, navigation is an overlay, Quick Launch cards reflow to two columns, and Canvas remains accessible as an overlay.
 
 ## Next gate
 
-Owner reviews visual style and interaction first. Only after acceptance: decide whether to migrate the prototype to `main`, then separately design the Presentation API contract and user/session isolation.
+Owner reviews desktop/mobile visual fidelity and basic interaction first. Keep the PR as Draft until actual browser acceptance. This UI polish phase does **not** authorize SSO, Presentation API integration or changes in downstream application contracts.

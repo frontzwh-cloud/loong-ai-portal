@@ -122,8 +122,9 @@ function QuickLaunch({ onOpen, onBrowse }: {
   </section>
 }
 
-function ChatPane({ demo, recommendation, onOpenRecommendation, onOpenService, onBrowseCategory }: {
+function ChatPane({ demo, recommendation, onOpenServices, onOpenRecommendation, onOpenService, onBrowseCategory }: {
   demo: boolean; recommendation: Service | null; onOpenRecommendation: () => void
+  onOpenServices: () => void
   onOpenService: (service: Service) => void; onBrowseCategory: (filter: Filter) => void
 }) {
   return <ThreadPrimitive.Root className="thread-root">
@@ -169,7 +170,12 @@ function ChatPane({ demo, recommendation, onOpenRecommendation, onOpenService, o
             ? '继续描述 PPT 需求（当前只演示交互，不执行生成）...'
             : '向龙小智提问，或描述你想完成的工作...'} />
           <div className="composer-actions">
-            <span className="composer-hint">Enter 发送 · Shift + Enter 换行</span>
+            <div className="composer-left">
+              <button type="button" className="composer-apps" aria-label="打开应用中心" onClick={onOpenServices}>
+                <Grid2X2 size={15}/> 应用
+              </button>
+              <span className="composer-hint">Enter 发送 · Shift + Enter 换行</span>
+            </div>
             <ComposerPrimitive.Send className="send-button" aria-label="发送消息">
               <ArrowUp size={18} />
             </ComposerPrimitive.Send>
@@ -387,6 +393,7 @@ export default function App() {
           </div>
         </header>
         {view === 'chat' ? <ChatPane demo={presentationDemo} recommendation={recommendation}
+          onOpenServices={() => navigate('services')}
           onOpenService={openService} onBrowseCategory={filter => navigate('services', filter)}
           onOpenRecommendation={() => recommendation && (recommendation.url ? openService(recommendation) : navigate('services', recommendation.category))}/> :
           <ServiceCenter filter={filter} onFilter={setFilter} onOpen={openService}/>}
