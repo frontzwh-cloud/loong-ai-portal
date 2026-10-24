@@ -16,7 +16,29 @@ describe('LOONG AI Portal UI prototype', () => {
     expect(screen.getByText('你好，我是龙小智')).toBeTruthy()
     expect(screen.getByRole('img', { name: '龙小智完整形象' })).toBeTruthy()
     expect(screen.getAllByRole('img', { name: '龙小智头像' }).length).toBeGreaterThan(0)
-    expect(screen.getByRole('button', { name: '制作 PPT' })).toBeTruthy()
+    const quick = within(screen.getByRole('region', { name: '快捷启动' }))
+    expect(quick.getByRole('button', { name: 'AI Presentation，界面演示' })).toBeTruthy()
+    expect(quick.getByRole('button', { name: 'AI Gemba，地址待配置' })).toHaveProperty('disabled', true)
+    expect(quick.getByRole('button', { name: 'Workflow，地址待配置' })).toHaveProperty('disabled', true)
+  })
+
+  it('opens Presentation from the homepage and browses office tools without losing chat', () => {
+    render(<App />)
+    const quick = within(screen.getByRole('region', { name: '快捷启动' }))
+    fireEvent.click(quick.getByRole('button', { name: '查看全部' }))
+    expect(screen.getByText('探索工作所需的一切')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: '龙小智助手' }))
+    fireEvent.click(within(screen.getByRole('region', { name: '快捷启动' })).getByRole('button', { name: 'AI Presentation，界面演示' }))
+    expect(screen.getByText('Presentation Canvas')).toBeTruthy()
+  })
+
+  it('lists a Windows AI app in both AI apps and Download Center', () => {
+    render(<App />)
+    fireEvent.click(within(screen.getByRole('region', { name: '快捷启动' })).getByRole('button', { name: '全部 AI 应用' }))
+    expect(screen.getByRole('heading', { name: '龙小智会议助手' })).toBeTruthy()
+    fireEvent.click(within(screen.getByRole('group', { name: '服务分类' })).getByRole('button', { name: '下载中心' }))
+    expect(screen.getByRole('heading', { name: '龙小智会议助手' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: 'AI Gemba' })).toBeNull()
   })
 
   it('navigates to the service directory and keeps unknown links disabled', () => {

@@ -9,7 +9,8 @@ The `prototype/react-assistant-ui` branch is a **frontend UX proof of concept**:
 - React + TypeScript + Vite + `@assistant-ui/react`, preserving the existing FastAPI backend.
 - ChatGPT-inspired minimal homepage with the user-provided 龙小智 mascot displayed in the greeting, assistant avatar and sidebar. The original transparent PNG is kept unchanged in `frontend/public/loong-ai-mascot.png`.
 - Assistant-style chat with streamed answer and separately collapsible provider reasoning (only if returned).
-- Searchable AI applications, office services, and download directory.
+- Chat-first Quick Launch with three featured AI applications and three compact office-service links; names and availability come from the same catalog as the searchable service directory.
+- Searchable AI applications, office services, and download directory. Windows AI applications appear in both the AI and Download filters.
 - A **simulated** AI Presentation conversation / right-hand Canvas for visual review. It does not call or modify the real AI Presentation application and cannot generate PPTX.
 
 See [prototype scope and acceptance](docs/UI_PROTOTYPE_20261024.md).

@@ -1,4 +1,4 @@
-export type ServiceCategory = 'ai' | 'office' | 'download'
+export type ServiceCategory = 'ai' | 'office'
 export type Service = {
   id: string
   name: string
@@ -25,7 +25,7 @@ export const catalog: Service[] = [
   {
     id: 'meeting', name: '龙小智会议助手',
     description: '会议录音、实时转写与 AI 纪要',
-    category: 'download', type: 'windows', url: import.meta.env.VITE_MEETING_DOWNLOAD_URL || '',
+    category: 'ai', type: 'windows', url: import.meta.env.VITE_MEETING_DOWNLOAD_URL || '',
   },
   {
     id: 'knowledge', name: '知识助手',

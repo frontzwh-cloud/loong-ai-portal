@@ -7,12 +7,12 @@ import {
   ArrowDownToLine, ArrowRight, ArrowUp, BookOpen, ChevronDown, ChevronLeft,
   ChevronRight, ExternalLink, FileText, Grid2X2, Home, LayoutPanelLeft,
   Link2, Menu, MessageSquareText, Mic2, Monitor, PanelRightClose,
-  PanelRightOpen, Plus, Search, Sparkles, Star, X,
+  Plus, Search, Sparkles,
 } from 'lucide-react'
 import { catalog, type Service, type ServiceCategory } from './catalog'
 
 type View = 'chat' | 'services'
-type Filter = 'all' | ServiceCategory
+type Filter = 'all' | 'download' | ServiceCategory
 type StreamEvent = { type: string; content?: string }
 
 const slideOutline = [
@@ -81,8 +81,50 @@ function AssistantMessage() {
   </MessagePrimitive.Root>
 }
 
-function ChatPane({ demo, recommendation, onOpenServices, onOpenRecommendation }: {
-  demo: boolean; recommendation: Service | null; onOpenServices: () => void; onOpenRecommendation: () => void
+const featuredAiIds = ['presentation', 'gemba', 'meeting'] as const
+const featuredOfficeIds = ['workflow', 'pdf', 'tools'] as const
+
+function QuickLaunch({ onOpen, onBrowse }: {
+  onOpen: (service: Service) => void; onBrowse: (filter: Filter) => void
+}) {
+  const featured = (ids: readonly string[]) => ids.flatMap(id => catalog.filter(item => item.id === id))
+  return <section className="quick-launch" aria-label="快捷启动">
+    <div className="quick-heading">
+      <div><span>AI APPLICATIONS</span><h2>用 AI 完成任务</h2></div>
+      <button type="button" onClick={() => onBrowse('ai')}>全部 AI 应用 <ArrowRight size={14}/></button>
+    </div>
+    <div className="quick-ai-grid">
+      {featured(featuredAiIds).map(item => {
+        const enabled = item.demo || Boolean(item.url)
+        return <button type="button" className="quick-ai-card" key={item.id}
+          onClick={() => onOpen(item)} disabled={!enabled}
+          aria-label={`${item.name}，${item.demo ? '界面演示' : enabled ? (item.type === 'windows' ? '下载客户端' : '打开应用') : '地址待配置'}`}>
+          <span className="quick-ai-icon"><ServiceIcon service={item} size={19}/></span>
+          <span className="quick-ai-body"><strong>{item.name}</strong><small>{item.id === 'presentation' ? '对话制作演示文稿' : item.id === 'gemba' ? '分析工厂运营指标' : '会议录音与纪要'}</small></span>
+          <span className={enabled ? 'quick-ai-action' : 'quick-ai-action unavailable'}>
+            {item.demo ? '演示' : !enabled ? '待配置' : item.type === 'windows' ? '下载' : <ArrowRight size={15}/>}
+          </span>
+        </button>
+      })}
+    </div>
+    <div className="quick-heading office-heading">
+      <div><span>WORKSPACE LINKS</span><h2>常用办公服务</h2></div>
+      <button type="button" onClick={() => onBrowse('office')}>查看全部 <ArrowRight size={14}/></button>
+    </div>
+    <div className="quick-office-links">
+      {featured(featuredOfficeIds).map(item => <button type="button" key={item.id}
+        className="quick-office-link" disabled={!item.url} onClick={() => onOpen(item)}
+        aria-label={`${item.name}，${item.url ? '打开服务' : '地址待配置'}`}>
+        <ServiceIcon service={item} size={15}/><span>{item.name}</span>
+        {item.url ? <ExternalLink size={13}/> : <small>待配置</small>}
+      </button>)}
+    </div>
+  </section>
+}
+
+function ChatPane({ demo, recommendation, onOpenRecommendation, onOpenService, onBrowseCategory }: {
+  demo: boolean; recommendation: Service | null; onOpenRecommendation: () => void
+  onOpenService: (service: Service) => void; onBrowseCategory: (filter: Filter) => void
 }) {
   return <ThreadPrimitive.Root className="thread-root">
     <ThreadPrimitive.Viewport className="thread-viewport" turnAnchor="top">
@@ -97,17 +139,7 @@ function ChatPane({ demo, recommendation, onOpenServices, onOpenRecommendation }
           </div>
           <h1>你好，我是龙小智</h1>
           <p>聊天、使用 AI、寻找工具，从这里开始。</p>
-          <div className="starter-prompts">
-            <ThreadPrimitive.Suggestion prompt="帮我制作一份 PPT" send className="starter-prompt">
-              <FileText size={15} /> 制作 PPT <ArrowRight size={14} />
-            </ThreadPrimitive.Suggestion>
-            <ThreadPrimitive.Suggestion prompt="介绍一下龙小智能做什么" send className="starter-prompt">
-              <Sparkles size={15} /> 认识龙小智 <ArrowRight size={14} />
-            </ThreadPrimitive.Suggestion>
-            <button type="button" className="starter-prompt" onClick={onOpenServices}>
-              <Grid2X2 size={15} /> 查找工具 <ArrowRight size={14} />
-            </button>
-          </div>
+          <QuickLaunch onOpen={onOpenService} onBrowse={onBrowseCategory}/>
         </div>}
       </AuiIf>
       <div className="thread-content">
@@ -194,7 +226,7 @@ function ServiceCenter({ filter, onFilter, onOpen }: {
   filter: Filter; onFilter: (value: Filter) => void; onOpen: (item: Service) => void
 }) {
   const [search, setSearch] = useState('')
-  const visible = catalog.filter(item => (filter === 'all' || item.category === filter) &&
+  const visible = catalog.filter(item => (filter === 'all' || (filter === 'download' ? item.type === 'windows' : item.category === filter)) &&
     (item.name + item.description).toLowerCase().includes(search.trim().toLowerCase()))
   const filters: { label: string; value: Filter }[] = [
     { label: '全部', value: 'all' }, { label: 'AI 应用', value: 'ai' },
@@ -355,7 +387,7 @@ export default function App() {
           </div>
         </header>
         {view === 'chat' ? <ChatPane demo={presentationDemo} recommendation={recommendation}
-          onOpenServices={() => navigate('services')}
+          onOpenService={openService} onBrowseCategory={filter => navigate('services', filter)}
           onOpenRecommendation={() => recommendation && (recommendation.url ? openService(recommendation) : navigate('services', recommendation.category))}/> :
           <ServiceCenter filter={filter} onFilter={setFilter} onOpen={openService}/>}
       </main>
