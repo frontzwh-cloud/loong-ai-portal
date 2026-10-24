@@ -7,7 +7,7 @@ Enterprise AI entry point: chat, AI application interaction, AI app navigation, 
 The `prototype/react-assistant-ui` branch is a **frontend UX proof of concept**:
 
 - React + TypeScript + Vite + `@assistant-ui/react`, preserving the existing FastAPI backend.
-- ChatGPT-inspired minimal homepage with an **official 龙小智 mascot asset slot**. The actual company mascot image is not in this repository and is not reproduced.
+- ChatGPT-inspired minimal homepage with the user-provided 龙小智 mascot displayed in the greeting, assistant avatar and sidebar. The original transparent PNG is kept unchanged in `frontend/public/loong-ai-mascot.png`.
 - Assistant-style chat with streamed answer and separately collapsible provider reasoning (only if returned).
 - Searchable AI applications, office services, and download directory.
 - A **simulated** AI Presentation conversation / right-hand Canvas for visual review. It does not call or modify the real AI Presentation application and cannot generate PPTX.
@@ -47,5 +47,5 @@ Copy `frontend/.env.example` to `frontend/.env.local` and set only the authorize
 
 ## Deployment boundary
 
-This is not a production-ready multi-user Portal: SSO, cross-application API contracts, user/task isolation, corporate mascot asset and deployment security remain unimplemented. Do not publish this demo on an enterprise-accessible host without approval.
+This is not a production-ready multi-user Portal: SSO, cross-application API contracts, user/task isolation and deployment security remain unimplemented. Do not publish this demo on an enterprise-accessible host without approval.
 

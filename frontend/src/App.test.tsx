@@ -14,6 +14,8 @@ describe('LOONG AI Portal UI prototype', () => {
   it('shows the chat-first entry point', () => {
     render(<App />)
     expect(screen.getByText('你好，我是龙小智')).toBeTruthy()
+    expect(screen.getByRole('img', { name: '龙小智完整形象' })).toBeTruthy()
+    expect(screen.getAllByRole('img', { name: '龙小智头像' }).length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: '制作 PPT' })).toBeTruthy()
   })
 

@@ -21,6 +21,7 @@ const slideOutline = [
   { title: '实际业务价值', note: '可量化的效率与业务改善' },
   { title: '下一步计划', note: '明确试点与推广边界' },
 ]
+const mascotUrl = `${import.meta.env.BASE_URL}loong-ai-mascot.png`
 
 // Prototype-only routing: transparent keyword matching, not an AI agent.
 // Production routing should return a reviewed service id from the Portal backend.
@@ -37,8 +38,8 @@ function suggestedService(input: string): Service | undefined {
 }
 
 function BrandMark({ small = false }: { small?: boolean }) {
-  return <span className={small ? 'brand-mark small' : 'brand-mark'} aria-label="LOONG AI 品牌占位符">
-    <Sparkles size={small ? 14 : 17} strokeWidth={2.2} />
+  return <span className={small ? 'brand-mark small' : 'brand-mark'}>
+    <img src={mascotUrl} alt="龙小智头像" />
   </span>
 }
 
@@ -91,8 +92,8 @@ function ChatPane({ demo, recommendation, onOpenServices, onOpenRecommendation }
           <h1>AI Presentation</h1>
           <p>已打开交互原型。右侧展示可选择的模拟故事板；尚未连接真实 PPT 服务。</p>
         </div> : <div className="chat-hero">
-          <div className="mascot-slot" aria-label="龙小智官方形象预留位置">
-            <span>龙</span><i><Sparkles size={15} /></i>
+          <div className="mascot-slot">
+            <img src={mascotUrl} alt="龙小智完整形象" />
           </div>
           <h1>你好，我是龙小智</h1>
           <p>聊天、使用 AI、寻找工具，从这里开始。</p>

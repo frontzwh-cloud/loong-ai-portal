@@ -9,7 +9,7 @@ Validate that the existing lightweight Portal can adopt the same React + `@assis
 
 ## In scope
 
-1. AI Home: spacious chat-first layout, low-noise navigation, AUMOVIO orange (`#FF4208`) for primary actions and restrained purple AI accent (`#4E28AA`).
+1. AI Home: spacious chat-first layout, low-noise navigation, AUMOVIO orange (`#FF4208`) for primary actions and restrained purple AI accent (`#4E28AA`). The user-provided official 龙小智 image is reused at three sizes in hero, chat and sidebar; the PNG itself is unmodified.
 2. Chat: assistant-ui runtime adapting the current `/api/chat` NDJSON stream. Provider reasoning is shown in a separate collapsible part only when actually received.
 3. Services: searchable directory with AI applications, office services and download links. Real URLs are deployment-provided; unconfigured entries are disabled.
    A local keyword-only demonstration recommends selected apps directly in the conversation (e.g. an OEE request points to Gemba) and exposes the service action, clearly labeled as a non-AI rule. This is not a production router.
@@ -21,7 +21,7 @@ Validate that the existing lightweight Portal can adopt the same React + `@assis
 - No real integration to `frontzwh-cloud/loong-ai-presentation`; no cross-repo API/contract change.
 - No Workflow/IIS SSO; no real user/account/UID data.
 - No new agent, RAG, model proxy, or business workflow.
-- No official mascot binary (it is absent from this repo); the temporary glyph is an explicit placeholder.
+- No custom/redrawn mascot variants; the approved supplied PNG is rendered with CSS-only avatar framing.
 - No real Gemba query or Meeting Assistant download until a verified internal URL is configured.
 - No approval for corporate data to flow through the existing default external chat provider.
 - No pilot/production authorization or formal product acceptance.
