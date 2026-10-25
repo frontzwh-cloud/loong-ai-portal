@@ -5,3 +5,5 @@ The Windows portable package includes CPython 3.13.17 from the Python Software F
 Backend dependencies are listed in `backend/requirements.lock`; their installed `.dist-info` metadata and bundled licenses remain under `.runtime/Lib/site-packages`. Frontend uses React, assistant-ui and Lucide with Vite; the source lockfile records exact versions, and dependency license/notice texts are copied under `licenses/frontend`. `BUILD_INFO.json` identifies downloaded runtime and wheels. `SHA256SUMS.json` records packaged file hashes.
 
 LOONG mascot is the existing user-approved repository asset, preserved without edits. This package does not grant rights to unrelated downstream application content or company marks.
+
+Ubuntu Docker distribution uses official Python and Node base images pinned by digest in Dockerfile. Runtime Python dependency metadata/licenses remain installed in the image; frontend dependency notices are retained under `/licenses/` in the served build. The Node toolchain is a build stage only. No build proxy CA or proxy setting is copied into the runtime image.

@@ -1,0 +1,32 @@
+services:
+  portal:
+    image: loong-ai-portal:${PORTAL_RELEASE:?Use deploy.sh to select a release}
+    build:
+      context: .
+      secrets:
+        - build_ca
+    env_file:
+      - path: ${PORTAL_CONFIG:?Use deploy.sh to select server configuration}
+        format: raw
+    ports:
+      - "${PORTAL_BIND:-127.0.0.1}:${PORTAL_PORT:-8000}:8000"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Optional existing CA bundle for dependency downloads only; never copied into the image.
+secrets:
+  build_ca:
+    file: ${PORTAL_BUILD_CA:-/dev/null}

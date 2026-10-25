@@ -2,7 +2,9 @@
 
 A local, chat-first AI portal built with React, TypeScript, `@assistant-ui/react` and FastAPI. This continues Draft PR #3, retaining the approved 龙小智 mascot, application finder, office shortcuts and simulated Presentation Canvas.
 
-**Windows users: [本地部署与使用说明](LOCAL_DEPLOYMENT.md).** Extract the Windows x64 Setup ZIP and run `Start-Portal.cmd`. No administrator, Docker, Node or preinstalled Python is required. The setup ZIP includes built UI and backend dependencies; its first launch downloads and checks the official Python runtime. Thereafter local demo mode works offline. Windows native acceptance is still pending; see [verification and limitations](docs/RELEASE_CANDIDATE.md).
+**Ubuntu + Docker users: [中文部署指南](UBUNTU_DEPLOYMENT.md).** Extract the Ubuntu amd64 offline package, then run `bash deploy.sh install`. It loads the verified bundled image, starts Compose and waits for health. No Node/Python installation or dependency downloads are needed for the offline package. Source installation is also supported. Configuration lives outside version folders and survives updates; rollback retains the previous image.
+
+The user corrected the target to an Ubuntu server with Docker. Earlier Windows packaging is retained as historical work, but Windows acceptance is no longer the target. GitHub bootstrap is prepared; the new local commits must be approved and pushed before its fixed-commit URL can work. See [Ubuntu execution evidence](docs/UBUNTU_ACCEPTANCE.md).
 
 The default demo makes no AI requests and visibly labels its canned replies. For real chat, configure an approved HTTPS OpenAI-compatible provider, exact model ID and API key in `backend/.env`, set `PORTAL_DEMO_MODE=false`, and restart. No provider, account or downstream service has been live-verified. Application links can be configured in the same file without rebuilding.
 
@@ -12,6 +14,16 @@ The default demo makes no AI requests and visibly labels its canned replies. For
 - Presentation Canvas is explicitly simulated, with no PPTX generation or real integration.
 - Backend serves the compiled UI on loopback. Secrets stay server-side. TLS verification is enabled.
 - No SSO, enterprise data access, downstream API integration or production deployment.
+
+## Ubuntu deployment
+
+```bash
+bash deploy.sh install
+# Edit ~/loong-ai-portal/shared/portal.env, then:
+bash ~/loong-ai-portal/current/deploy.sh restart
+```
+
+Default binding is loopback; the guide includes SSH forwarding. No authentication/SSO is claimed. `update`, `rollback`, `status`, `logs` and `stop` are also supported.
 
 ## Developer quick start
 

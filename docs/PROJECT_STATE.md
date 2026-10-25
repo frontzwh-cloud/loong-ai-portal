@@ -1,7 +1,7 @@
 # LOONG AI Portal — Current State
 
 UPDATED = 2026-10-25
-STATUS = LOCAL_RELEASE_CANDIDATE_PENDING_WINDOWS_ACCEPTANCE
+STATUS = UBUNTU_DOCKER_CANDIDATE_PENDING_PUBLICATION_AND_OWNER_ACCEPTANCE
 
 ## Objective and implementation
 
@@ -17,10 +17,14 @@ Current local candidate includes:
 
 Presentation Canvas and keyword recommendations remain labeled demonstrations. No PPTX generation, downstream API integration, SSO, enterprise data ingestion or durable chat history.
 
+## Ubuntu deployment continuation
+
+The user corrected the target on 2026-10-25: Ubuntu server with Docker already installed, GitHub download preferred, and server-local AI configuration to fill in later. Preserve earlier UI work and Windows files; optimize current delivery for Ubuntu Docker.
+
+Added a multi-stage Docker image, Compose service, versioned deploy/update/rollback script, independent shared configuration, health checks and immutable-commit GitHub bootstrap. The offline amd64 package includes the tested Docker image. No Docker installation, firewall/system-security changes, real-server deployment or real credentials are part of this work.
+
 ## Execution evidence and next gate
 
-See [candidate verification](RELEASE_CANDIDATE.md) and [local deployment guide](../LOCAL_DEPLOYMENT.md). Linux tests and Chromium interaction checks are execution evidence, not final Windows or owner acceptance.
+See [Ubuntu acceptance evidence](UBUNTU_ACCEPTANCE.md) and [Chinese Ubuntu deployment guide](../UBUNTU_DEPLOYMENT.md). Earlier Windows work remains documented in [prior candidate report](RELEASE_CANDIDATE.md); it does not establish Windows runtime acceptance.
 
-Native Windows x64 first-launch download, embedded runtime, ordinary-user execution, corporate endpoint policies and real approved AI service acceptance remain pending. The build environment cannot download the official Python runtime because its network proxy returns HTTP 403; the Setup ZIP downloads and verifies that runtime on the user's first launch. Full offline packaging remains possible on a builder with permitted python.org access.
-
-Final product acceptance remains with the user. Original Issues #1/#2 describe earlier V0.1/demo work; PR #3 and this candidate's evidence describe the continuation. Do not revert to the old Vue demo or create competing UI implementations.
+Local Docker build/start and recovery checks are execution evidence, not final acceptance of the user's actual server or a real AI service. Final product acceptance remains with the user. GitHub push/publication is still unapproved and has not occurred; the bootstrap URL cannot reference unpublished local commits yet. Continue on Draft PR #3's existing branch. Do not revert to the old Vue demo or create competing UI implementations.
