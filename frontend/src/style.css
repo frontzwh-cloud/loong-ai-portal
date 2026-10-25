@@ -245,3 +245,52 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus
   .services-page { padding: 28px 18px; }
   .service-toolbar { margin-top: 25px; }
 }
+
+/* UX polish: constrained heights, keyboard access and comfortable compact layouts. */
+.thread-viewport, .services-page, .canvas { overscroll-behavior: contain; }
+.thread-viewport { scroll-padding-bottom: 24px; }
+.quick-ai-card:focus-visible, .quick-office-link:focus-visible,
+.nav-item:focus-visible, .service-action:focus-visible,
+.composer-apps:focus-visible, .icon-action:focus-visible {
+  outline: 3px solid rgba(255, 66, 8, .36);
+  outline-offset: 3px;
+}
+.quick-ai-card:disabled, .quick-office-link:disabled { cursor: default; }
+.quick-ai-card:disabled { opacity: 1; }
+.quick-ai-card:disabled .quick-ai-icon { color: #8c81a0; background: #f4f3f6; }
+.quick-office-link:disabled { opacity: .85; }
+.quick-ai-body strong, .quick-office-link span { overflow-wrap: anywhere; }
+.chat-hero { flex-shrink: 0; }
+.composer-zone { flex-shrink: 0; }
+@media (max-height: 760px) and (min-width: 841px) {
+  .chat-hero { padding-top: 12px; padding-bottom: 8px; }
+  .mascot-slot { width: 113px; height: 112px; margin-bottom: 5px; }
+  .chat-hero h1 { font-size: 27px; }
+  .chat-hero p { margin-top: 5px; }
+  .quick-launch { margin-top: 18px; }
+  .quick-ai-card { min-height: 87px; padding-top: 12px; padding-bottom: 22px; }
+  .office-heading { margin-top: 16px; }
+  .quick-office-link { padding-top: 9px; padding-bottom: 9px; }
+  .composer-zone { padding-top: 10px; padding-bottom: 8px; }
+}
+@media (max-width: 540px) {
+  .thread-viewport { scroll-padding-bottom: 12px; }
+  .chat-hero h1 { font-size: clamp(22px, 6vw, 29px); }
+  .chat-hero p { font-size: 12px; }
+  .quick-ai-card { flex-wrap: wrap; }
+  .quick-ai-body { flex: 1; min-width: 85px; }
+  .quick-office-link { padding: 11px 8px; gap: 6px; }
+  .composer-zone { padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+}
+@media (max-width: 380px) {
+  .quick-ai-grid, .quick-office-links { grid-template-columns: minmax(0,1fr); }
+  .quick-ai-card { min-height: 76px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
