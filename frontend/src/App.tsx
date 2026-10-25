@@ -7,7 +7,7 @@ import {
   ArrowDownToLine, ArrowRight, ArrowUp, BookOpen, ChevronDown, ChevronLeft,
   ChevronRight, ExternalLink, FileText, Grid2X2, Home, LayoutPanelLeft,
   Link2, Menu, MessageSquareText, Mic2, Monitor, PanelRightClose,
-  Plus, Search, Sparkles,
+  Plus, Search, Sparkles, X,
 } from 'lucide-react'
 import { catalog, type Service, type ServiceCategory } from './catalog'
 
@@ -228,28 +228,39 @@ function PresentationCanvas({ onClose }: { onClose: () => void }) {
   </aside>
 }
 
-function ServiceCenter({ filter, onFilter, onOpen }: {
-  filter: Filter; onFilter: (value: Filter) => void; onOpen: (item: Service) => void
+function ServiceCenter({ filter, onFilter, onOpen, onBack }: {
+  filter: Filter; onFilter: (value: Filter) => void; onOpen: (item: Service) => void; onBack: () => void
 }) {
   const [search, setSearch] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
+  useEffect(() => { searchRef.current?.focus() }, [])
+  const query = search.trim().toLowerCase()
   const visible = catalog.filter(item => (filter === 'all' || (filter === 'download' ? item.type === 'windows' : item.category === filter)) &&
-    (item.name + item.description).toLowerCase().includes(search.trim().toLowerCase()))
+    (item.name + item.description).toLowerCase().includes(query))
   const filters: { label: string; value: Filter }[] = [
     { label: '全部', value: 'all' }, { label: 'AI 应用', value: 'ai' },
     { label: '办公服务', value: 'office' }, { label: '下载中心', value: 'download' },
   ]
   return <div className="services-page">
-    <div className="services-header"><span className="eyebrow">DISCOVER</span><h1>探索工作所需的一切</h1>
+    <div className="services-header">
+      <button type="button" className="back-to-chat" onClick={onBack}><ChevronLeft size={16}/> 返回对话</button>
+      <h1>探索工作所需的一切</h1>
       <p>AI 应用、办公服务和客户端，集中在一个地方。</p></div>
     <div className="service-toolbar">
-      <label className="service-search"><Search size={18}/>
-        <input value={search} onChange={event => setSearch(event.target.value)} placeholder="搜索应用名称或用途" />
-      </label>
+      <div className="service-search"><Search size={18}/>
+        <input ref={searchRef} aria-label="搜索应用" value={search}
+          onChange={event => setSearch(event.target.value)}
+          onKeyDown={event => { if (event.key === 'Escape' && search) { event.stopPropagation(); setSearch('') } }}
+          placeholder="搜索应用名称或用途" />
+        {search && <button type="button" className="search-clear" aria-label="清除搜索"
+          onClick={() => { setSearch(''); searchRef.current?.focus() }}><X size={15}/></button>}
+      </div>
       <div className="service-filters" role="group" aria-label="服务分类">
         {filters.map(item => <button key={item.value} type="button" onClick={() => onFilter(item.value)}
           className={filter === item.value ? 'filter active' : 'filter'}>{item.label}</button>)}
       </div>
     </div>
+    <p className="service-result-count" role="status">{query ? `找到 ${visible.length} 个匹配服务` : `共 ${visible.length} 个服务`}</p>
     <div className="service-grid">
       {visible.map(item => <article className="service-card" key={item.id}>
         <div className="service-card-top"><div className="service-icon"><ServiceIcon service={item}/></div>
@@ -262,7 +273,10 @@ function ServiceCenter({ filter, onFilter, onOpen }: {
         </button>
       </article>)}
     </div>
-    {visible.length === 0 && <p className="empty-services">没有找到匹配的服务。</p>}
+    {visible.length === 0 && <div className="empty-services">
+      <p>没有找到匹配的服务。</p>
+      <button type="button" onClick={() => { setSearch(''); onFilter('all'); searchRef.current?.focus() }}>查看全部服务</button>
+    </div>}
     <p className="services-note">真实服务链接通过内部部署配置提供。未配置的入口不会打开虚构地址。</p>
   </div>
 }
@@ -348,6 +362,16 @@ export default function App() {
     return () => controller.abort()
   }, [])
 
+  useEffect(() => {
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      if (mobileNav) setMobileNav(false)
+      else if (presentationDemo && view === 'chat') setDemo(false)
+    }
+    window.addEventListener('keydown', onEscape)
+    return () => window.removeEventListener('keydown', onEscape)
+  }, [mobileNav, presentationDemo, view])
+
   function navigate(next: View, nextFilter: Filter = 'all') {
     setView(next); setFilter(nextFilter); setMobileNav(false)
   }
@@ -359,7 +383,7 @@ export default function App() {
 
   return <AssistantRuntimeProvider runtime={runtime}>
     <div className={presentationDemo && view === 'chat' ? 'portal-shell with-canvas' : 'portal-shell'}>
-      <aside className={mobileNav ? 'sidebar mobile-open' : 'sidebar'}>
+      <aside id="portal-sidebar" className={mobileNav ? 'sidebar mobile-open' : 'sidebar'}>
         <div className="sidebar-brand"><BrandMark/><div><strong>LOONG AI</strong><span>Ask · Analyze · Act</span></div></div>
         <button className="new-chat" type="button" onClick={newChat}><Plus size={17}/> 新对话</button>
         <div className="nav-section-label">WORKSPACE</div>
@@ -384,7 +408,7 @@ export default function App() {
       <main className="main-area">
         <header className="topbar">
           <div className="topbar-left">
-            <button type="button" className="icon-action mobile-menu" onClick={() => setMobileNav(true)} aria-label="打开导航"><Menu size={19}/></button>
+            <button type="button" className="icon-action mobile-menu" aria-expanded={mobileNav} aria-controls="portal-sidebar" onClick={() => setMobileNav(true)} aria-label="打开导航"><Menu size={19}/></button>
             <div className="topbar-breadcrumb"><Home size={16}/><ChevronRight size={14}/><span>{view === 'chat' ? '龙小智助手' : '服务中心'}</span></div>
             {presentationDemo && view === 'chat' && <span className="active-task-badge"><FileText size={14}/> Presentation · Demo</span>}
           </div>
@@ -396,7 +420,7 @@ export default function App() {
           onOpenServices={() => navigate('services')}
           onOpenService={openService} onBrowseCategory={filter => navigate('services', filter)}
           onOpenRecommendation={() => recommendation && (recommendation.url ? openService(recommendation) : navigate('services', recommendation.category))}/> :
-          <ServiceCenter filter={filter} onFilter={setFilter} onOpen={openService}/>}
+          <ServiceCenter filter={filter} onFilter={setFilter} onOpen={openService} onBack={() => navigate('chat')}/>}
       </main>
       {view === 'chat' && presentationDemo && <PresentationCanvas onClose={() => setDemo(false)} />}
     </div>
