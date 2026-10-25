@@ -2,7 +2,9 @@
 
 目标：已有 Docker Engine 和 Docker Compose v2.30+ 的 Ubuntu 服务器。服务器需要可访问 Docker Hub、npm、PyPI（从源码构建时）。无需服务器安装 Node/Python。本工具不会安装 Docker、修改防火墙/证书/系统安全设置，也不会访问你的实际服务器。
 
-## 推荐：离线候选包（Ubuntu x86_64 / amd64）
+## 本地离线候选包（尚未公开发布）
+
+约 53 MB 的离线镜像包只在开发环境生成，**未上传 GitHub，也未发布 Release**。GitHub 源码下载不包含它。只有另外取得此包后，才使用以下步骤；直接从 GitHub 部署请看下一节。
 
 将 `LoongAI-Portal-Ubuntu-amd64-Offline.tar.gz` 和配套 `.sha256` 文件放在同一目录：
 
@@ -19,15 +21,15 @@ bash loong-portal-source/deploy.sh install
 
 使用已经有 Docker 访问权限的账号，不要为了此脚本修改权限或安全设置。没有 Docker 或 Compose 时明确报错，不自动安装。
 
-## GitHub 一键下载部署（待本候选提交获准推送后可用）
+## GitHub 源码一键下载部署
 
-当前改动只在本地，**GitHub 尚未包含候选提交**。在父任务获准推送后，把实际发布的完整提交 SHA 替换到下列命令；不要使用旧 PR head 或猜测版本号：
+用户已批准提交到现有 `prototype/react-assistant-ui` 分支，保留 Draft PR #3。使用交付说明中已验证的完整提交 SHA 替换下列值；GitHub 源码归档不含预构建镜像，首次执行将联网构建镜像（Docker Hub、npm、PyPI）。
 
 ```bash
 REV=完整的40位已发布提交SHA; curl -fsSL "https://raw.githubusercontent.com/frontzwh-cloud/loong-ai-portal/$REV/bootstrap.sh" -o /tmp/loong-portal-install.sh && bash /tmp/loong-portal-install.sh "$REV"
 ```
 
-下载固定提交而不是移动分支。下载/构建失败会明确退出；已有健康版本不会因构建失败被替换。私有仓库需要你自己的 GitHub 下载权限；脚本不保存、索取或内嵌 GitHub token。
+下载固定提交而不是移动分支。下载/构建失败会明确退出；已有健康版本不会因构建失败被替换。提交时仓库为公开仓库，因此该命令无需令牌。若以后改为私有仓库，匿名 curl/此 bootstrap 不再适用：先使用你已有的 GitHub 登录（例如已认证的 `gh` 或 Git）下载对应提交，再在解压/检出目录执行 `bash deploy.sh install`。不要把 token 放进 URL；脚本不保存、索取或内嵌凭据。
 
 ## 从电脑访问
 

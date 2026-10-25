@@ -2,9 +2,9 @@
 
 A local, chat-first AI portal built with React, TypeScript, `@assistant-ui/react` and FastAPI. This continues Draft PR #3, retaining the approved 龙小智 mascot, application finder, office shortcuts and simulated Presentation Canvas.
 
-**Ubuntu + Docker users: [中文部署指南](UBUNTU_DEPLOYMENT.md).** Extract the Ubuntu amd64 offline package, then run `bash deploy.sh install`. It loads the verified bundled image, starts Compose and waits for health. No Node/Python installation or dependency downloads are needed for the offline package. Source installation is also supported. Configuration lives outside version folders and survives updates; rollback retains the previous image.
+**Ubuntu + Docker users: [中文部署指南](UBUNTU_DEPLOYMENT.md).** Download the reviewed GitHub source commit and run `bash deploy.sh install`, or use its fixed-commit bootstrap command. Source installation builds the image using Docker Hub/npm/PyPI; it does not require host Node/Python. Configuration lives outside version folders and survives updates; rollback retains the previous image. A separately tested amd64 offline image package exists locally but is not published on GitHub.
 
-The user corrected the target to an Ubuntu server with Docker. Earlier Windows packaging is retained as historical work, but Windows acceptance is no longer the target. GitHub bootstrap is prepared; the new local commits must be approved and pushed before its fixed-commit URL can work. See [Ubuntu execution evidence](docs/UBUNTU_ACCEPTANCE.md).
+The user corrected the target to an Ubuntu server with Docker. Earlier Windows packaging is retained as historical work, but Windows acceptance is no longer the target. The user authorized submission to the existing draft branch. Use the verified commit SHA supplied with the submission for GitHub bootstrap. See [Ubuntu execution evidence](docs/UBUNTU_ACCEPTANCE.md).
 
 The default demo makes no AI requests and visibly labels its canned replies. For real chat, configure an approved HTTPS OpenAI-compatible provider, exact model ID and API key in `backend/.env`, set `PORTAL_DEMO_MODE=false`, and restart. No provider, account or downstream service has been live-verified. Application links can be configured in the same file without rebuilding.
 

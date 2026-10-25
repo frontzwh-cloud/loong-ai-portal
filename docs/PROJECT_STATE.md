@@ -1,7 +1,7 @@
 # LOONG AI Portal — Current State
 
 UPDATED = 2026-10-25
-STATUS = UBUNTU_DOCKER_CANDIDATE_PENDING_PUBLICATION_AND_OWNER_ACCEPTANCE
+STATUS = UBUNTU_DOCKER_CANDIDATE_PENDING_OWNER_ACCEPTANCE
 
 ## Objective and implementation
 
@@ -27,4 +27,4 @@ Added a multi-stage Docker image, Compose service, versioned deploy/update/rollb
 
 See [Ubuntu acceptance evidence](UBUNTU_ACCEPTANCE.md) and [Chinese Ubuntu deployment guide](../UBUNTU_DEPLOYMENT.md). Earlier Windows work remains documented in [prior candidate report](RELEASE_CANDIDATE.md); it does not establish Windows runtime acceptance.
 
-Local Docker build/start and recovery checks are execution evidence, not final acceptance of the user's actual server or a real AI service. Final product acceptance remains with the user. GitHub push/publication is still unapproved and has not occurred; the bootstrap URL cannot reference unpublished local commits yet. Continue on Draft PR #3's existing branch. Do not revert to the old Vue demo or create competing UI implementations.
+Local Docker build/start and recovery checks are execution evidence, not final acceptance of the user's actual server or a real AI service. Final product acceptance remains with the user. The user authorized GitHub branch submission on 2026-10-25. This does not authorize main merge, GitHub Release/offline-binary publication, Library upload or real-server deployment. Use PR #3 for current remote submission status. Continue on Draft PR #3's existing branch. Do not revert to the old Vue demo or create competing UI implementations.
