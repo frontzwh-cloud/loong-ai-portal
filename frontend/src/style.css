@@ -294,3 +294,66 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus
     transition-duration: .01ms !important;
   }
 }
+
+
+/* Finder polish: ChatGPT-like service discovery, no additional dashboard chrome. */
+.services-header, .service-toolbar, .service-grid, .service-result-count, .services-note, .empty-services {
+  max-width: 1030px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.back-to-chat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 0 21px -5px;
+  padding: 5px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #817e79;
+  font-size: 12px;
+}
+.back-to-chat:hover { background: #f5f4f2; color: #383633; }
+.services-header h1 { margin-top: 0; }
+.service-toolbar { margin-top: 28px; margin-bottom: 15px; }
+.service-search { width: min(100%, 420px); min-height: 46px; background: #fafaf9; gap: 11px; }
+.service-search input { font-size: 13px; }
+.search-clear {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #96918b;
+}
+.search-clear:hover { background: #eeedeb; color: #3b3936; }
+.service-result-count { margin-top: 0; margin-bottom: 12px; color: #a19c95; font-size: 11px; }
+.service-grid { gap: 12px; }
+.service-card { min-height: 191px; padding: 18px; border-color: #eeece9; }
+.service-card h2 { margin-top: 14px; }
+.service-card p { margin-bottom: 17px; }
+.service-card:hover { transform: none; }
+.empty-services { padding: 42px 16px; text-align: center; border: 1px dashed #e8e5e2; border-radius: 14px; }
+.empty-services p { margin: 0 0 13px; }
+.empty-services button {
+  padding: 9px 12px;
+  background: #f6f5f3;
+  border: 1px solid #e9e8e5;
+  border-radius: 9px;
+  color: #45413e;
+  font-size: 12px;
+}
+.empty-services button:hover { background: #eeedeb; }
+.back-to-chat:focus-visible, .search-clear:focus-visible, .empty-services button:focus-visible {
+  outline: 3px solid rgba(255,66,8,.28);
+  outline-offset: 2px;
+}
+@media (max-width: 540px) {
+  .service-toolbar { margin-top: 23px; }
+  .service-search { width: 100%; }
+  .service-card { min-height: 182px; }
+}
