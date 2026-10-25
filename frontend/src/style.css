@@ -224,7 +224,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus
 }
 @media (max-width: 540px) {
   .topbar { padding: 0 16px; }
-  .system-state { font-size: 0; }
+  .system-state { font-size: 9px; max-width: 125px; }
   .topbar-breadcrumb { font-size: 11px; }
   .active-task-badge { display: none; }
   .chat-hero { padding-top: 24px; width: calc(100% - 34px); }

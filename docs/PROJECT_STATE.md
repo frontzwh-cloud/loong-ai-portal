@@ -1,74 +1,26 @@
 # LOONG AI Portal — Current State
 
-UPDATED = 2026-09-23
-STATUS = DEMO_SPRINT_ACTIVE
+UPDATED = 2026-10-25
+STATUS = LOCAL_RELEASE_CANDIDATE_PENDING_WINDOWS_ACCEPTANCE
 
-## Objective
+## Objective and implementation
 
-Build LOONG AI as the factory's unified AI entry point.
+Continue the existing React + `@assistant-ui/react` + FastAPI implementation on Draft PR #3 (`prototype/react-assistant-ui`). Portal owns chat UX, branding and application navigation; downstream systems remain their own authorities. No main merge, publication or production deployment is authorized by this implementation checkpoint.
 
-The first usable version is an AI Chat-centered portal that can answer general questions through an external model and quickly route users into existing applications.
+Current local candidate includes:
+- Approved 龙小智 mascot and chat-first interface; AI/office/download service finder.
+- Streaming compatible-model adapter with provider-returned reasoning, stop, visible failures and bounded in-memory context.
+- Explicit local canned-response demo, no external model requests in demo mode.
+- Server-side configuration for model and public navigation URLs; unconfigured links disabled.
+- Built frontend served by FastAPI on loopback, local launcher, Windows setup packaging and Chinese deployment guide.
+- TLS certificate verification restored; typed/bounded request validation; no raw upstream error bodies exposed.
 
-## V0.1 Scope
+Presentation Canvas and keyword recommendations remain labeled demonstrations. No PPTX generation, downstream API integration, SSO, enterprise data ingestion or durable chat history.
 
-```text
-LOONG AI Chat
-→ DeepSeek-compatible external API
-→ streaming answer
-→ provider-returned reasoning shown separately as 思考过程
-→ session-only bounded multi-turn context
-→ quick system/application shortcuts
-```
+## Execution evidence and next gate
 
-Initial quick destinations:
-- Meeting Assistant / 预约会议
-- 会议记录
-- 会议纪要
-- 历史会议
+See [candidate verification](RELEASE_CANDIDATE.md) and [local deployment guide](../LOCAL_DEPLOYMENT.md). Linux tests and Chromium interaction checks are execution evidence, not final Windows or owner acceptance.
 
-The exact integration shape for additional systems/reports/knowledge bases remains future work.
+Native Windows x64 first-launch download, embedded runtime, ordinary-user execution, corporate endpoint policies and real approved AI service acceptance remain pending. The build environment cannot download the official Python runtime because its network proxy returns HTTP 403; the Setup ZIP downloads and verifies that runtime on the user's first launch. Full offline packaging remains possible on a builder with permitted python.org access.
 
-## Architecture Direction
-
-```text
-Portal UI
-   ↓
-Portal backend / secure model client
-   ↓
-External AI provider
-
-Portal UI
-   ↓
-Application Registry / Navigation
-   ↓
-Independent enterprise applications
-```
-
-Do not put external API secrets in the frontend.
-
-## Durable Product Boundary
-
-Portal = interaction/routing layer.
-
-Independent systems remain authorities for their own domain data and workflows.
-
-The existing Meeting Assistant is an integration target, not the codebase foundation for this Portal.
-
-## Initial Acceptance Target
-
-A user can:
-1. open the LOONG AI Chat page;
-2. ask a normal question;
-3. see streaming reasoning when the provider returns reasoning content;
-4. see the final answer separately;
-5. ask a bounded follow-up question;
-6. click a shortcut and enter an existing application;
-7. use the Portal without exposing the external API key in frontend state/bundle.
-
-## Next Work
-
-Immediate execution authority is GitHub Issue `frontzwh-cloud/loong-ai-portal#2` (2-hour demo sprint).
-
-Parent V0.1 implementation scope remains tracked by GitHub Issue `frontzwh-cloud/loong-ai-portal#1`.
-
-The earlier planning Issue in `frontzwh-cloud/loong-ai-meeting-assistant#152` is superseded by this new project and must not be implemented in the Meeting Assistant repository.
+Final product acceptance remains with the user. Original Issues #1/#2 describe earlier V0.1/demo work; PR #3 and this candidate's evidence describe the continuation. Do not revert to the old Vue demo or create competing UI implementations.

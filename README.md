@@ -1,53 +1,49 @@
 # LOONG AI Portal
 
-Enterprise AI entry point: chat, AI application interaction, AI app navigation, and deployed office service navigation.
+A local, chat-first AI portal built with React, TypeScript, `@assistant-ui/react` and FastAPI. This continues Draft PR #3, retaining the approved 龙小智 mascot, application finder, office shortcuts and simulated Presentation Canvas.
 
-## Current prototype
+**Windows users: [本地部署与使用说明](LOCAL_DEPLOYMENT.md).** Extract the Windows x64 Setup ZIP and run `Start-Portal.cmd`. No administrator, Docker, Node or preinstalled Python is required. The setup ZIP includes built UI and backend dependencies; its first launch downloads and checks the official Python runtime. Thereafter local demo mode works offline. Windows native acceptance is still pending; see [verification and limitations](docs/RELEASE_CANDIDATE.md).
 
-The `prototype/react-assistant-ui` branch is a **frontend UX proof of concept**:
+The default demo makes no AI requests and visibly labels its canned replies. For real chat, configure an approved HTTPS OpenAI-compatible provider, exact model ID and API key in `backend/.env`, set `PORTAL_DEMO_MODE=false`, and restart. No provider, account or downstream service has been live-verified. Application links can be configured in the same file without rebuilding.
 
-- React + TypeScript + Vite + `@assistant-ui/react`, preserving the existing FastAPI backend.
-- ChatGPT-inspired minimal homepage with the user-provided 龙小智 mascot displayed in the greeting, assistant avatar and sidebar. The original transparent PNG is kept unchanged in `frontend/public/loong-ai-mascot.png`.
-- Assistant-style chat with streamed answer and separately collapsible provider reasoning (only if returned).
-- Chat-first Quick Launch with three featured AI applications and three compact office-service links; names and availability come from the same catalog as the searchable service directory.
-- Compact "应用" control inside the chat composer opens the service directory without clearing the conversation; home layout gives more room to the supplied mascot and quick-launch actions.
-- Searchable AI applications, office services, and download directory. Windows AI applications appear in both the AI and Download filters.
-- A **simulated** AI Presentation conversation / right-hand Canvas for visual review. It does not call or modify the real AI Presentation application and cannot generate PPTX.
+- Streaming answers, provider-returned reasoning, cancellation and visible failure messages.
+- Bounded in-memory conversations; navigation preserves the conversation, refresh clears it.
+- Searchable AI applications, office tools and download links; absent or invalid links are disabled.
+- Presentation Canvas is explicitly simulated, with no PPTX generation or real integration.
+- Backend serves the compiled UI on loopback. Secrets stay server-side. TLS verification is enabled.
+- No SSO, enterprise data access, downstream API integration or production deployment.
 
-See [prototype scope and acceptance](docs/UI_PROTOTYPE_20261024.md).
-
-## Run locally
-
-Backend (Python 3.11+):
+## Developer quick start
 
 ```bash
-cd backend
-python -m pip install -r requirements.txt
-cp .env.example .env
-# Optional: edit .env to configure an approved model endpoint and key.
-uvicorn main:app --host 127.0.0.1 --port 8000
-```
-
-Frontend (Node 20.19+ or 22.12+):
-
-```bash
+python -m venv .venv
+.venv/bin/python -m pip install -r backend/requirements.lock
 cd frontend
 npm ci
-npm run dev
+npm run build
+cd ..
+.venv/bin/python launcher.py
 ```
 
-Open `http://localhost:5173`. Vite proxies `/api` to `http://127.0.0.1:8000`, so the browser does not need a separate backend URL.
+Windows Python path: `.venv\Scripts\python.exe`. The launcher creates local `.env` from the demo example only if absent, opens the browser and handles duplicate starts. Full configuration, restart, troubleshooting and build instructions are in the deployment guide.
 
-`npm run build` type-checks and creates the static production bundle.
-`npm test` runs the frontend navigation and Canvas smoke tests in jsdom.
+## Verification and packaging
 
-The demo homepage, app directory, and PPT Canvas work without any model key. Ordinary AI chat requires the existing FastAPI model configuration. Do not send private company information to an unapproved external endpoint.
+```bash
+.venv/bin/python -m pip install pytest
+.venv/bin/python -m pytest -q tests
+cd frontend
+npm test
+npm run build
+cd ..
+# With the demo server running, Linux Chromium interaction checks:
+node scripts/browser-check.mjs
+# Setup ZIP (runtime downloaded on first launch):
+.venv/bin/python scripts/build_windows.py --bootstrap
+# Full offline ZIP (builder needs access to python.org):
+.venv/bin/python scripts/build_windows.py
+```
 
-## Configure app links
+`CHROMIUM_PATH` overrides the browser check's `/usr/bin/chromium`; `PORTAL_TEST_URL` overrides the loopback URL. Playwright is a dev dependency. Package contents are explicitly allowlisted; local `.env` is never copied. Backend versions are pinned in `backend/requirements.lock`, frontend versions in `frontend/package-lock.json`. Package SHA256 and component hashes are produced under `artifacts/`.
 
-Copy `frontend/.env.example` to `frontend/.env.local` and set only the authorized internal HTTP(S) or approved download URLs. `VITE_` values are included in the browser bundle: **never place secrets here**. Empty URLs are displayed as **待配置** and cannot be opened.
-
-## Deployment boundary
-
-This is not a production-ready multi-user Portal: SSO, cross-application API contracts, user/task isolation and deployment security remain unimplemented. Do not publish this demo on an enterprise-accessible host without approval.
-
+Project authority: [manifest](PROJECT_MANIFEST.md), [overlay](docs/PROJECT_OVERLAY.md), [current state](docs/PROJECT_STATE.md). Earlier UI scope: [prototype notes](docs/UI_PROTOTYPE_20261024.md).

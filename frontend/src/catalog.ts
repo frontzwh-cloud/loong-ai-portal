@@ -48,3 +48,19 @@ export const catalog: Service[] = [
     category: 'office', type: 'web', url: import.meta.env.VITE_OFFICE_TOOLS_URL || '',
   },
 ]
+
+export function safeLink(value: unknown): string {
+  if (typeof value !== 'string') return ''
+  try {
+    const parsed = new URL(value)
+    return ['https:', 'http:'].includes(parsed.protocol) && !parsed.username && !parsed.password ? value : ''
+  } catch { return '' }
+}
+
+export function applyRuntimeLinks(links: Record<string, unknown>) {
+  for (const item of catalog) {
+    if (!item.demo && Object.prototype.hasOwnProperty.call(links, item.id)) item.url = safeLink(links[item.id])
+  }
+}
+// Validate developer build-time links too.
+for (const item of catalog) item.url = safeLink(item.url)

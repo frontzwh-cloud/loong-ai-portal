@@ -9,7 +9,7 @@ import {
   Link2, Menu, MessageSquareText, Mic2, Monitor, PanelRightClose,
   Plus, Search, Sparkles, X,
 } from 'lucide-react'
-import { catalog, type Service, type ServiceCategory } from './catalog'
+import { applyRuntimeLinks, catalog, type Service, type ServiceCategory } from './catalog'
 
 type View = 'chat' | 'services'
 type Filter = 'all' | 'download' | ServiceCategory
@@ -166,7 +166,7 @@ function ChatPane({ demo, recommendation, onOpenServices, onOpenRecommendation, 
       </div>
       <ThreadPrimitive.ViewportFooter className="composer-zone">
         <ComposerPrimitive.Root className="composer">
-          <ComposerPrimitive.Input rows={2} placeholder={demo
+          <ComposerPrimitive.Input maxLength={16000} rows={2} placeholder={demo
             ? '继续描述 PPT 需求（当前只演示交互，不执行生成）...'
             : '向龙小智提问，或描述你想完成的工作...'} />
           <div className="composer-actions">
@@ -176,12 +176,13 @@ function ChatPane({ demo, recommendation, onOpenServices, onOpenRecommendation, 
               </button>
               <span className="composer-hint">Enter 发送 · Shift + Enter 换行</span>
             </div>
-            <ComposerPrimitive.Send className="send-button" aria-label="发送消息">
+            <AuiIf condition={state => !state.thread.isRunning}><ComposerPrimitive.Send className="send-button" aria-label="发送消息">
               <ArrowUp size={18} />
-            </ComposerPrimitive.Send>
+            </ComposerPrimitive.Send></AuiIf>
+            <AuiIf condition={state => state.thread.isRunning}><ComposerPrimitive.Cancel className="send-button" aria-label="停止回答"><X size={18}/></ComposerPrimitive.Cancel></AuiIf>
           </div>
         </ComposerPrimitive.Root>
-        <p className="chat-disclaimer">龙小智可能出错。企业数据仅能发送到经过批准的模型服务。</p>
+        <p className="chat-disclaimer">龙小智可能出错。企业数据仅能发送到经过批准的模型服务。刷新或关闭页面会清空对话。</p>
       </ThreadPrimitive.ViewportFooter>
     </ThreadPrimitive.Viewport>
   </ThreadPrimitive.Root>
@@ -286,7 +287,8 @@ export default function App() {
   const [filter, setFilter] = useState<Filter>('all')
   const [presentationDemo, setPresentationDemo] = useState(false)
   const [recommendation, setRecommendation] = useState<Service | null>(null)
-  const [apiState, setApiState] = useState<'ready' | 'missing' | 'offline'>('offline')
+  const [apiState, setApiState] = useState<'ready' | 'missing' | 'offline' | 'demo'>('offline')
+  const [, setConfigVersion] = useState(0)
   const [mobileNav, setMobileNav] = useState(false)
   const demoRef = useRef(false)
 
@@ -319,37 +321,48 @@ export default function App() {
         yield { content: [{ type: 'text', text: '我可以与你日常交流，也可以帮助你找到 AI Gemba、龙小智会议助手等工具。AI Presentation 的右侧工作区正在演示阶段；尚未开放的服务不会冒充已连接。' }] }
         return
       }
-      const response = await fetch('/api/chat', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: abortSignal,
-        body: JSON.stringify({ messages: messages.filter(message => message.role === 'user' || message.role === 'assistant')
-          .map(message => ({ role: message.role, content: message.content.filter(part => part.type === 'text').map(part => part.text).join('\n') })) }),
-      })
-      if (!response.ok || !response.body) throw new Error('AI 后端不可用（HTTP ' + response.status + '）')
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = '', text = '', reasoning = ''
-      while (true) {
-        const { value, done } = await reader.read()
-        buffer += decoder.decode(value || new Uint8Array(), { stream: !done })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ''
-        for (const line of lines) {
-          if (!line.trim()) continue
-          let event: StreamEvent
-          try { event = JSON.parse(line) as StreamEvent } catch { continue }
-          if (event.type === 'reasoning_delta') reasoning += event.content || ''
-          if (event.type === 'answer_delta') text += event.content || ''
-          if (event.type === 'error') text = event.content || 'AI 服务暂时不可用'
-          if (event.type === 'answer_delta' || event.type === 'reasoning_delta' || event.type === 'error') {
-            yield { content: [
-              ...(reasoning ? [{ type: 'reasoning' as const, text: reasoning }] : []),
-              ...(text ? [{ type: 'text' as const, text }] : []),
-            ] }
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: abortSignal,
+          body: JSON.stringify({ messages: messages.filter(message => message.role === 'user' || message.role === 'assistant')
+            .map(message => ({ role: message.role, content: message.content.filter(part => part.type === 'text').map(part => part.text).join('\n') })).filter(message => message.content.trim()).slice(-40) }),
+        })
+        if (!response.ok || !response.body) throw new Error(response.status === 422 || response.status === 413 ? '对话过长或格式无效，请缩短消息或开始新对话。' : 'AI 后端不可用（HTTP ' + response.status + '），请检查启动窗口后重试。')
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = '', text = '', reasoning = ''
+        let completed = false
+        try {
+        while (true) {
+          const { value, done } = await reader.read()
+          buffer += decoder.decode(value || new Uint8Array(), { stream: !done })
+          const lines = (buffer + (done && !buffer.endsWith('\n') ? '\n' : '')).split('\n')
+          buffer = lines.pop() || ''
+          for (const line of lines) {
+            if (!line.trim()) continue
+            let event: StreamEvent
+            try { event = JSON.parse(line) as StreamEvent } catch { continue }
+            if (event.type === 'reasoning_delta') reasoning += event.content || ''
+            if (event.type === 'answer_delta') text += event.content || ''
+            if (event.type === 'completed' || event.type === 'error') completed = true
+            if (event.type === 'error') text += '\n\n' + (event.content || 'AI 服务暂时不可用')
+            if (event.type === 'answer_delta' || event.type === 'reasoning_delta' || event.type === 'error') {
+              yield { content: [
+                ...(reasoning ? [{ type: 'reasoning' as const, text: reasoning }] : []),
+                ...(text ? [{ type: 'text' as const, text }] : []),
+              ] }
+            }
           }
+          if (done) break
         }
-        if (done) break
+        } finally { await reader.cancel().catch(() => {}); reader.releaseLock() }
+        if (!completed) text += '\n\n连接提前结束，回答可能不完整，请重试。'
+        if (!completed) yield { content: [{ type: 'text', text }] }
+        if (!text && !reasoning) yield { content: [{ type: 'text', text: '本次请求未返回有效内容。' }] }
+      } catch (error) {
+        if (abortSignal.aborted) return
+        yield { content: [{ type: 'text', text: error instanceof Error && (error.message.startsWith('AI 后端') || error.message.startsWith('对话过长')) ? error.message : '无法连接 AI 后端。请检查启动窗口，然后重新发送消息。' }] }
       }
-      if (!text && !reasoning) yield { content: [{ type: 'text', text: '本次请求未返回有效内容。' }] }
     },
   }), [])
   const runtime = useLocalRuntime(adapter)
@@ -357,8 +370,11 @@ export default function App() {
   useEffect(() => {
     const controller = new AbortController()
     fetch('/api/health', { signal: controller.signal })
-      .then(response => response.json()).then(data => setApiState(data.deepseek === 'configured' ? 'ready' : 'missing'))
+      .then(response => response.json()).then(data => setApiState(data.mode === 'demo' ? 'demo' : data.deepseek === 'configured' ? 'ready' : 'missing'))
       .catch(() => { if (!controller.signal.aborted) setApiState('offline') })
+    fetch('/api/config', { signal: controller.signal }).then(response => response.json()).then(data => {
+      if (data.links && !controller.signal.aborted) { applyRuntimeLinks(data.links); setConfigVersion(v => v + 1) }
+    }).catch(() => {})
     return () => controller.abort()
   }, [])
 
@@ -379,7 +395,7 @@ export default function App() {
     if (item.demo) { setDemo(true); navigate('chat'); return }
     if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer')
   }
-  function newChat() { runtime.thread.reset(); setDemo(false); setRecommendation(null); navigate('chat') }
+  function newChat() { runtime.thread.cancelRun(); runtime.thread.reset(); setDemo(false); setRecommendation(null); navigate('chat') }
 
   return <AssistantRuntimeProvider runtime={runtime}>
     <div className={presentationDemo && view === 'chat' ? 'portal-shell with-canvas' : 'portal-shell'}>
@@ -402,7 +418,7 @@ export default function App() {
           <button type="button" className={view === 'services' && filter === 'download' ? 'nav-item active' : 'nav-item'} onClick={() => navigate('services','download')}><ArrowDownToLine size={18}/> 下载中心</button>
         </nav>
         <div className="sidebar-spacer"/>
-        <div className="sidebar-bottom"><div className="avatar-placeholder">L</div><div><b>LOONG AI Portal</b><small>内部交互原型</small></div></div>
+        <div className="sidebar-bottom"><div className="avatar-placeholder">L</div><div><b>LOONG AI Portal</b><small>本地版 · 会话不保存</small></div></div>
       </aside>
       {mobileNav && <button type="button" className="mobile-overlay" aria-label="关闭导航" onClick={() => setMobileNav(false)}/>}
       <main className="main-area">
@@ -412,7 +428,7 @@ export default function App() {
             <div className="topbar-breadcrumb"><Home size={16}/><ChevronRight size={14}/><span>{view === 'chat' ? '龙小智助手' : '服务中心'}</span></div>
             {presentationDemo && view === 'chat' && <span className="active-task-badge"><FileText size={14}/> Presentation · Demo</span>}
           </div>
-          <div className="topbar-right"><span className="system-state"><i className={apiState === 'ready' ? 'status-dot green' : 'status-dot'} />{apiState === 'ready' ? 'AI 已配置' : apiState === 'missing' ? 'AI 待配置' : '后端未连接'}</span>
+          <div className="topbar-right"><span className="system-state"><i className={apiState === 'ready' ? 'status-dot green' : 'status-dot'} />{apiState === 'demo' ? '本地演示 · 非真实 AI' : apiState === 'ready' ? 'AI 已配置' : apiState === 'missing' ? 'AI 待配置' : '后端未连接'}</span>
             {presentationDemo && view === 'chat' && <button type="button" className="icon-action canvas-toggle" aria-label="关闭演示工作区" onClick={() => setDemo(false)}><PanelRightClose size={19}/></button>}
           </div>
         </header>
