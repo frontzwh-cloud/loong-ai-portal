@@ -41,6 +41,39 @@ describe('LOONG AI Portal UI prototype', () => {
     expect(screen.queryByRole('heading', { name: 'AI Gemba' })).toBeNull()
   })
 
+  it('focuses service search, recovers from empty results and returns to conversation', () => {
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: '全部服务' }))
+    const search = screen.getByRole('textbox', { name: '搜索应用' }) as HTMLInputElement
+    expect(document.activeElement).toBe(search)
+    fireEvent.change(search, { target: { value: 'no_matching_service_123' } })
+    expect(screen.getByText('没有找到匹配的服务。')).toBeTruthy()
+    expect(screen.getByText('找到 0 个匹配服务')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: '查看全部服务' }))
+    expect(search.value).toBe('')
+    expect(screen.getByRole('heading', { name: 'AI Gemba' })).toBeTruthy()
+    fireEvent.change(search, { target: { value: 'AI Gemba' } })
+    expect(screen.getByText('找到 1 个匹配服务')).toBeTruthy()
+    fireEvent.keyDown(search, { key: 'Escape' })
+    expect(search.value).toBe('')
+    fireEvent.click(screen.getByRole('button', { name: '返回对话' }))
+    expect(screen.getByText('你好，我是龙小智')).toBeTruthy()
+  })
+
+  it('dismisses the mobile navigation and demo Canvas with Escape', () => {
+    render(<App />)
+    const menu = screen.getByRole('button', { name: '打开导航' })
+    fireEvent.click(menu)
+    expect(menu.getAttribute('aria-expanded')).toBe('true')
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(menu.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(within(screen.getByRole('region', { name: '快捷启动' }))
+      .getByRole('button', { name: 'AI Presentation，界面演示' }))
+    expect(screen.getByText('Presentation Canvas')).toBeTruthy()
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.queryByText('Presentation Canvas')).toBeNull()
+  })
+
   it('navigates to the service directory and keeps unknown links disabled', () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '全部服务' }))
