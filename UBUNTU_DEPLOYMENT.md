@@ -107,3 +107,9 @@ bash ~/loong-ai-portal/current/deploy.sh stop
 ## 构建环境说明
 
 源码构建需要正常访问 Docker Hub、npm 和 PyPI。若网络使用企业代理，请联系 IT 配置构建环境。内网 AI 服务的证书选项只影响 AI 请求，不影响构建依赖下载。
+
+## 管理应用链接（候选功能）
+
+左侧新增“应用链接管理”，维护 AI Gemba、会议助手下载页、知识助手、Workflow、PDF 工具与办公工具箱的 URL；会议助手只打开已有下载页面，Portal 不管理安装包。修改后无需重启；配置位于 PORTAL_HOME/shared/app-links/app-links.json，更新/回滚不覆盖。
+
+当前 http://loongai 无登录鉴权，因此管理员必须在服务器 portal.env 中配置 PORTAL_ADMIN_TOKEN（本机 openssl rand -hex 32 生成），使用 SSH 端口转发从 http://127.0.0.1:8000 访问管理界面。普通内网页面不能提交密钥。具体步骤见 docs/APP_LINK_ADMIN.md。

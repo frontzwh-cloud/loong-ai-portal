@@ -1,7 +1,8 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { AdminLinks } from './AdminLinks'
 
+beforeEach(() => window.localStorage.clear())
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
 describe('protected app link management', () => {

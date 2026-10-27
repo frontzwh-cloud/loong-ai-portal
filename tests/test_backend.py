@@ -131,7 +131,8 @@ def test_admin_rejects_remote_and_wrong_credentials(admin_registry):
         (admin_headers(host="loongai"), 403),
         (admin_headers(origin="http://loongai"), 403),
     ]:
-        assert client.put("/api/admin/links", headers=headers, json={"links": {}}).status_code == code
+        valid = {key: "" for key in main.LINK_ENV}
+        assert client.put("/api/admin/links", headers=headers, json={"links": valid}).status_code == code
     assert not admin_registry.exists()
     response = client.get("/api/admin/links", headers={"Host":"127.0.0.1:8000", "Authorization":"Bearer " + "x"*64})
     assert response.status_code == 200

@@ -1,7 +1,7 @@
 # LOONG AI Portal — Current State
 
 UPDATED = 2026-10-27
-STATUS = DRAFT_HISTORY_CANDIDATE_PENDING_OWNER_ACCEPTANCE
+STATUS = DRAFT_ADMIN_LINKS_CANDIDATE_PENDING_OWNER_ACCEPTANCE
 
 ## Objective and implementation
 
@@ -34,3 +34,7 @@ Added a multi-stage Docker image, Compose service, versioned deploy/update/rollb
 See [Ubuntu acceptance evidence](UBUNTU_ACCEPTANCE.md) and [Chinese Ubuntu deployment guide](../UBUNTU_DEPLOYMENT.md). Earlier Windows work remains documented in [prior candidate report](RELEASE_CANDIDATE.md); it does not establish Windows runtime acceptance.
 
 Local Docker build/start and recovery checks are execution evidence, not final acceptance of the user's actual server or a real AI service. Final product acceptance remains with the user. The user authorized GitHub branch submission on 2026-10-25. This does not authorize main merge, GitHub Release/offline-binary publication, Library upload or real-server deployment. Use PR #3 for current remote submission status. Continue on Draft PR #3's existing branch. Do not revert to the old Vue demo or create competing UI implementations.
+
+## Application link management — 2026-10-27
+
+User requested a small admin interface for existing AI/workplace application URLs, especially Meeting Assistant download PAGE. Candidate implements a fixed allowlist editor, protected backend and server-local persistent app-links JSON. Public URL navigation remains read-only. No SSO, model credentials, app business integration, production merge or real-server deployment was authorized. See APP_LINK_ADMIN.md for security boundary and pending acceptance.
