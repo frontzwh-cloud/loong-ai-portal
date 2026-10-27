@@ -357,3 +357,40 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus
   .service-search { width: 100%; }
   .service-card { min-height: 182px; }
 }
+
+
+/* Answer reading rhythm: plain surfaces, Markdown semantics, unobtrusive actions. */
+.assistant-text { white-space: normal; line-height: 1.75; }
+.markdown-content { overflow-wrap: anywhere; }
+.markdown-content p { margin: 0 0 13px; }
+.markdown-content > :last-child { margin-bottom: 0; }
+.markdown-content h1, .markdown-content h2, .markdown-content h3, .markdown-content h4 {
+  color: #292827; line-height: 1.4; font-weight: 700; margin: 20px 0 10px;
+}
+.markdown-content > :first-child { margin-top: 0; }
+.markdown-content h1 { font-size: 20px; }
+.markdown-content h2 { font-size: 17px; }
+.markdown-content h3 { font-size: 15px; }
+.markdown-content h4 { font-size: 14px; }
+.markdown-content ul, .markdown-content ol { margin: 8px 0 15px; padding-left: 1.65em; }
+.markdown-content li { padding-left: 3px; margin: 4px 0; }
+.markdown-content li::marker { color: #827c76; }
+.markdown-content strong { font-weight: 700; }
+.markdown-content a { color: #4e28aa; text-decoration: underline; text-underline-offset: 3px; }
+.markdown-content a:hover { color: #37197f; }
+.markdown-content code { font-size: .9em; background: #f4f3f1; border-radius: 5px; padding: 2px 5px; }
+.markdown-code { margin: 10px 0 16px; border: 1px solid #e9e7e4; border-radius: 10px; overflow: hidden; background: #fafaf9; }
+.markdown-code-language { border-bottom: 1px solid #e9e7e4; padding: 6px 12px; color: #88817b; font-size: 11px; }
+.markdown-content pre { overflow-x: auto; max-width: 100%; padding: 13px; margin: 0; line-height: 1.55; }
+.markdown-content pre code { background: none; padding: 0; font-size: 12px; white-space: pre; }
+.markdown-content blockquote { border-left: 3px solid #d9d2e5; color: #6c6864; padding: 2px 0 2px 14px; margin: 12px 0 16px; }
+.markdown-content hr { border: 0; border-top: 1px solid #ebe8e4; margin: 20px 0; }
+.assistant-actions { display: flex; align-items: center; gap: 2px; margin-top: 9px; }
+.assistant-action { display: inline-flex; align-items: center; justify-content: center; width: 29px; height: 29px;
+  border: 0; border-radius: 8px; color: #918c86; background: transparent; cursor: pointer; }
+.assistant-action:hover:not(:disabled) { color: #403b38; background: #f4f3f1; }
+.assistant-action:disabled { opacity: .3; cursor: default; }
+.assistant-action:focus-visible { outline: 2px solid #ff4208; outline-offset: 2px; }
+.assistant-action .action-copied-icon { display: none; }
+.assistant-action[data-copied] .action-copy-icon { display: none; }
+.assistant-action[data-copied] .action-copied-icon { display: block; }

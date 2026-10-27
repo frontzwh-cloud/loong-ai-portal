@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  AuiIf, AssistantRuntimeProvider, ComposerPrimitive, MessagePartPrimitive,
+  ActionBarPrimitive, AuiIf, AssistantRuntimeProvider, ComposerPrimitive, MessagePartPrimitive,
   MessagePrimitive, ThreadPrimitive, useLocalRuntime, type ChatModelAdapter,
 } from '@assistant-ui/react'
 import {
-  ArrowDownToLine, ArrowRight, ArrowUp, BookOpen, ChevronDown, ChevronLeft,
+  ArrowDownToLine, ArrowRight, ArrowUp, BookOpen, Check, ChevronDown, ChevronLeft,
   ChevronRight, ExternalLink, FileText, Grid2X2, Home, LayoutPanelLeft,
-  Link2, Menu, MessageSquareText, Mic2, Monitor, PanelRightClose,
+  Link2, Menu, MessageSquareText, Mic2, Monitor, PanelRightClose, Copy, RefreshCw,
   Plus, Search, Sparkles, X,
 } from 'lucide-react'
 import { applyRuntimeLinks, catalog, type Service, type ServiceCategory } from './catalog'
+import { MarkdownMessageText } from './MarkdownMessageText'
 
 type View = 'chat' | 'services'
 type Filter = 'all' | 'download' | ServiceCategory
@@ -73,10 +74,19 @@ function AssistantMessage() {
               <div className="reasoning-text"><MessagePartPrimitive.Text /></div>
             </details>
           }
-          if (part.type === 'text') return <div className="assistant-text"><MessagePartPrimitive.Text /></div>
+          if (part.type === 'text') return <div className="assistant-text"><MarkdownMessageText /></div>
           return null
         }}
       </MessagePrimitive.Parts>
+      <ActionBarPrimitive.Root className="assistant-actions" hideWhenRunning>
+        <ActionBarPrimitive.Copy className="assistant-action" aria-label="复制回答" title="复制回答" copiedDuration={2000}>
+          <Copy size={15} className="action-copy-icon" />
+          <Check size={15} className="action-copied-icon" />
+        </ActionBarPrimitive.Copy>
+        <ActionBarPrimitive.Reload className="assistant-action" aria-label="重新生成" title="重新生成">
+          <RefreshCw size={15} />
+        </ActionBarPrimitive.Reload>
+      </ActionBarPrimitive.Root>
     </div>
   </MessagePrimitive.Root>
 }
