@@ -7,15 +7,16 @@ import {
   ArrowDownToLine, ArrowRight, ArrowUp, BookOpen, Check, ChevronDown, ChevronLeft,
   ChevronRight, ExternalLink, FileText, Grid2X2, Home, LayoutPanelLeft,
   Link2, Menu, MessageSquareText, Mic2, Monitor, PanelRightClose, Copy, RefreshCw,
-  Plus, Search, Sparkles, X,
+  Plus, Search, Settings2, Sparkles, X,
 } from 'lucide-react'
 import { applyRuntimeLinks, catalog, type Service, type ServiceCategory } from './catalog'
 import { MarkdownMessageText } from './MarkdownMessageText'
 import { ConversationHistory } from './ConversationHistory'
+import { AdminLinks } from './AdminLinks'
 import { emptyHistory, loadHistory, newThread, removeThread, renameThread, saveSnapshot, selectThread,
   HISTORY_KEY, type HistoryState, type SavedMessage, type SavedThread } from './history'
 
-type View = 'chat' | 'services'
+type View = 'chat' | 'services' | 'admin'
 type Filter = 'all' | 'download' | ServiceCategory
 type StreamEvent = { type: string; content?: string }
 
@@ -111,11 +112,11 @@ function QuickLaunch({ onOpen, onBrowse }: {
         const enabled = item.demo || Boolean(item.url)
         return <button type="button" className="quick-ai-card" key={item.id}
           onClick={() => onOpen(item)} disabled={!enabled}
-          aria-label={`${item.name}，${item.demo ? '界面演示' : enabled ? (item.type === 'windows' ? '下载客户端' : '打开应用') : '地址待配置'}`}>
+          aria-label={`${item.name}，${item.demo ? '界面演示' : enabled ? (item.type === 'windows' ? '打开下载页' : '打开应用') : '地址待配置'}`}>
           <span className="quick-ai-icon"><ServiceIcon service={item} size={19}/></span>
           <span className="quick-ai-body"><strong>{item.name}</strong><small>{item.id === 'presentation' ? '对话制作演示文稿' : item.id === 'gemba' ? '分析工厂运营指标' : '会议录音与纪要'}</small></span>
           <span className={enabled ? 'quick-ai-action' : 'quick-ai-action unavailable'}>
-            {item.demo ? '演示' : !enabled ? '待配置' : item.type === 'windows' ? '下载' : <ArrowRight size={15}/>}
+            {item.demo ? '演示' : !enabled ? '待配置' : item.type === 'windows' ? '下载页' : <ArrowRight size={15}/>}
           </span>
         </button>
       })}
@@ -282,7 +283,7 @@ function ServiceCenter({ filter, onFilter, onOpen, onBack }: {
         <h2>{item.name}</h2><p>{item.description}</p>
         <button type="button" className="service-action" onClick={() => onOpen(item)}
           disabled={!item.demo && !item.url}>
-          {item.demo ? '进入交互演示' : item.url ? (item.type === 'windows' ? '下载客户端' : '打开服务') : '地址待配置'}
+          {item.demo ? '进入交互演示' : item.url ? (item.type === 'windows' ? '打开下载页' : '打开服务') : '地址待配置'}
           {item.demo ? <ArrowRight size={15}/> : item.url ? (item.type === 'windows' ? <ArrowDownToLine size={15}/> : <ExternalLink size={15}/>) : null}
         </button>
       </article>)}
@@ -449,6 +450,11 @@ function Conversation({ activeId, initialMessages, threads, onSnapshot, onNewThr
           <button type="button" className={view === 'services' && filter === 'office' ? 'nav-item active' : 'nav-item'} onClick={() => navigate('services','office')}><Link2 size={18}/> 办公服务</button>
           <button type="button" className={view === 'services' && filter === 'download' ? 'nav-item active' : 'nav-item'} onClick={() => navigate('services','download')}><ArrowDownToLine size={18}/> 下载中心</button>
         </nav>
+        <div className="admin-nav-wrap">
+          <button type="button" className={view === 'admin' ? 'nav-item active' : 'nav-item'} onClick={() => navigate('admin')}>
+            <Settings2 size={18}/> 应用链接管理
+          </button>
+        </div>
         <ConversationHistory threads={threads} currentId={activeId} onSelect={switchThread}
           onRename={onRenameThread} onDelete={deleteThread}
           onClear={() => { runtime.thread.cancelRun(); onClearHistory() }}/>
@@ -459,7 +465,7 @@ function Conversation({ activeId, initialMessages, threads, onSnapshot, onNewThr
         <header className="topbar">
           <div className="topbar-left">
             <button type="button" className="icon-action mobile-menu" aria-expanded={mobileNav} aria-controls="portal-sidebar" onClick={() => setMobileNav(true)} aria-label="打开导航"><Menu size={19}/></button>
-            <div className="topbar-breadcrumb"><Home size={16}/><ChevronRight size={14}/><span>{view === 'chat' ? '龙小智助手' : '服务中心'}</span></div>
+            <div className="topbar-breadcrumb"><Home size={16}/><ChevronRight size={14}/><span>{view === 'chat' ? '龙小智助手' : view === 'admin' ? '应用链接管理' : '服务中心'}</span></div>
             {presentationDemo && view === 'chat' && <span className="active-task-badge"><FileText size={14}/> Presentation · Demo</span>}
           </div>
           <div className="topbar-right"><span className="system-state"><i className={apiState === 'ready' ? 'status-dot green' : 'status-dot'} />{apiState === 'demo' ? '本地演示 · 非真实 AI' : apiState === 'ready' ? 'AI 已配置' : apiState === 'missing' ? 'AI 待配置' : '后端未连接'}</span>
@@ -470,6 +476,7 @@ function Conversation({ activeId, initialMessages, threads, onSnapshot, onNewThr
           onOpenServices={() => navigate('services')}
           onOpenService={openService} onBrowseCategory={filter => navigate('services', filter)}
           onOpenRecommendation={() => recommendation && (recommendation.url ? openService(recommendation) : navigate('services', recommendation.category))}/> :
+          view === 'admin' ? <AdminLinks onSaved={links => { applyRuntimeLinks(links); setConfigVersion(v => v + 1) }}/> :
           <ServiceCenter filter={filter} onFilter={setFilter} onOpen={openService} onBack={() => navigate('chat')}/>}
       </main>
       {view === 'chat' && presentationDemo && <PresentationCanvas onClose={() => setDemo(false)} />}
