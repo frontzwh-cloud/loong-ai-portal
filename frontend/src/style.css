@@ -394,3 +394,32 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus
 .assistant-action .action-copied-icon { display: none; }
 .assistant-action[data-copied] .action-copy-icon { display: none; }
 .assistant-action[data-copied] .action-copied-icon { display: block; }
+
+
+/* Browser-local conversation history. No added dashboard chrome. */
+.history-panel { display: flex; flex-direction: column; min-height: 0; flex: 1; margin: 21px 0 0; padding-top: 15px; border-top: 1px solid #eaeae7; }
+.history-heading { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 11px 9px 14px; color: #9a9691; font-size: 11px; }
+.history-heading strong { font-weight: 650; }
+.history-heading button, .history-actions button, .history-edit button { display: grid; place-items: center; width: 27px; height: 27px; border: 0; border-radius: 7px; color: #96918c; background: transparent; }
+.history-heading button:hover, .history-actions button:hover, .history-edit button:hover { color: #35312d; background: #eceae7; }
+.history-list { min-height: 0; overflow-y: auto; scrollbar-width: thin; padding: 0 4px 8px; }
+.history-empty { color: #aaa59f; line-height: 1.65; font-size: 11px; margin: 7px 9px; }
+.history-item { display: flex; align-items: center; min-height: 37px; margin-bottom: 2px; border-radius: 9px; }
+.history-item:hover { background: #f0efed; }
+.history-item.selected { background: #ecebe9; }
+.history-open { display: flex; align-items: center; min-width: 0; flex: 1; padding: 9px 4px 9px 9px; gap: 8px; text-align: left; border: 0; color: #625f5b; background: transparent; font-size: 12px; }
+.history-item.selected .history-open { color: #302e2b; font-weight: 640; }
+.history-open svg { flex: none; color: #aaa49e; }
+.history-open span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.history-actions { display: flex; flex: none; opacity: 0; padding-right: 3px; }
+.history-item:hover .history-actions, .history-item:focus-within .history-actions { opacity: 1; }
+.history-edit { display: flex; align-items: center; width: 100%; gap: 2px; padding: 4px; }
+.history-edit input { width: 1px; flex: 1; min-width: 0; padding: 5px 6px; border: 1px solid #d8d5d0; border-radius: 6px; background: white; font-size: 12px; }
+.history-note { flex: none; padding: 9px 12px 0; margin: 0; color: #a29e99; font-size: 10px; }
+@media (hover: none) { .history-actions { opacity: 1; } }
+@media (max-width: 1180px) {
+  .with-canvas .history-panel { display: none; }
+}
+@media (max-width: 840px) {
+  .with-canvas .history-panel { display: flex; }
+}

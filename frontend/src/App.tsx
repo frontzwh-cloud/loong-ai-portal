@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActionBarPrimitive, AuiIf, AssistantRuntimeProvider, ComposerPrimitive, MessagePartPrimitive,
-  MessagePrimitive, ThreadPrimitive, useLocalRuntime, type ChatModelAdapter,
+  MessagePrimitive, ThreadPrimitive, useAuiState, useLocalRuntime, type ChatModelAdapter,
 } from '@assistant-ui/react'
 import {
   ArrowDownToLine, ArrowRight, ArrowUp, BookOpen, Check, ChevronDown, ChevronLeft,
@@ -11,6 +11,9 @@ import {
 } from 'lucide-react'
 import { applyRuntimeLinks, catalog, type Service, type ServiceCategory } from './catalog'
 import { MarkdownMessageText } from './MarkdownMessageText'
+import { ConversationHistory } from './ConversationHistory'
+import { emptyHistory, loadHistory, newThread, removeThread, renameThread, saveSnapshot, selectThread,
+  HISTORY_KEY, type HistoryState, type SavedMessage, type SavedThread } from './history'
 
 type View = 'chat' | 'services'
 type Filter = 'all' | 'download' | ServiceCategory
@@ -192,7 +195,7 @@ function ChatPane({ demo, recommendation, onOpenServices, onOpenRecommendation, 
             <AuiIf condition={state => state.thread.isRunning}><ComposerPrimitive.Cancel className="send-button" aria-label="停止回答"><X size={18}/></ComposerPrimitive.Cancel></AuiIf>
           </div>
         </ComposerPrimitive.Root>
-        <p className="chat-disclaimer">龙小智可能出错。企业数据仅能发送到经过批准的模型服务。刷新或关闭页面会清空对话。</p>
+        <p className="chat-disclaimer">龙小智可能出错。企业数据仅能发送到经过批准的模型服务。历史仅保存于当前浏览器，可在左侧删除；清除浏览器数据后无法恢复。</p>
       </ThreadPrimitive.ViewportFooter>
     </ThreadPrimitive.Viewport>
   </ThreadPrimitive.Root>
@@ -292,7 +295,18 @@ function ServiceCenter({ filter, onFilter, onOpen, onBack }: {
   </div>
 }
 
-export default function App() {
+function Conversation({ activeId, initialMessages, threads, onSnapshot, onNewThread, onSelectThread, onRenameThread, onRemoveThread, onClearHistory, persistenceWarning }: {
+  activeId: string
+  initialMessages: SavedMessage[]
+  threads: SavedThread[]
+  onSnapshot: (id: string, messages: SavedMessage[]) => void
+  onNewThread: () => void
+  onSelectThread: (id: string) => void
+  onRenameThread: (id: string, title: string) => void
+  onRemoveThread: (id: string) => void
+  onClearHistory: () => void
+  persistenceWarning: boolean
+}) {
   const [view, setView] = useState<View>('chat')
   const [filter, setFilter] = useState<Filter>('all')
   const [presentationDemo, setPresentationDemo] = useState(false)
@@ -375,7 +389,7 @@ export default function App() {
       }
     },
   }), [])
-  const runtime = useLocalRuntime(adapter)
+  const runtime = useLocalRuntime(adapter, { initialMessages })
 
   useEffect(() => {
     const controller = new AbortController()
@@ -405,9 +419,12 @@ export default function App() {
     if (item.demo) { setDemo(true); navigate('chat'); return }
     if (item.url) window.open(item.url, '_blank', 'noopener,noreferrer')
   }
-  function newChat() { runtime.thread.cancelRun(); runtime.thread.reset(); setDemo(false); setRecommendation(null); navigate('chat') }
+  function newChat() { runtime.thread.cancelRun(); onNewThread(); setDemo(false); setRecommendation(null); navigate('chat') }
+  function switchThread(id: string) { if (id === activeId) { navigate('chat'); return }; runtime.thread.cancelRun(); onSelectThread(id); navigate('chat') }
+  function deleteThread(id: string) { if (id === activeId) runtime.thread.cancelRun(); onRemoveThread(id) }
 
   return <AssistantRuntimeProvider runtime={runtime}>
+    <HistoryRecorder threadId={activeId} onSnapshot={onSnapshot}/>
     <div className={presentationDemo && view === 'chat' ? 'portal-shell with-canvas' : 'portal-shell'}>
       <aside id="portal-sidebar" className={mobileNav ? 'sidebar mobile-open' : 'sidebar'}>
         <div className="sidebar-brand"><BrandMark/><div><strong>LOONG AI</strong><span>Ask · Analyze · Act</span></div></div>
@@ -427,8 +444,10 @@ export default function App() {
           <button type="button" className={view === 'services' && filter === 'office' ? 'nav-item active' : 'nav-item'} onClick={() => navigate('services','office')}><Link2 size={18}/> 办公服务</button>
           <button type="button" className={view === 'services' && filter === 'download' ? 'nav-item active' : 'nav-item'} onClick={() => navigate('services','download')}><ArrowDownToLine size={18}/> 下载中心</button>
         </nav>
-        <div className="sidebar-spacer"/>
-        <div className="sidebar-bottom"><div className="avatar-placeholder">L</div><div><b>LOONG AI Portal</b><small>本地版 · 会话不保存</small></div></div>
+        <ConversationHistory threads={threads} currentId={activeId} onSelect={switchThread}
+          onRename={onRenameThread} onDelete={deleteThread}
+          onClear={() => { runtime.thread.cancelRun(); onClearHistory() }}/>
+        <div className="sidebar-bottom"><div className="avatar-placeholder">L</div><div><b>LOONG AI Portal</b><small>{persistenceWarning ? '历史保存失败 · 请检查浏览器设置' : '历史仅保存在当前浏览器'}</small></div></div>
       </aside>
       {mobileNav && <button type="button" className="mobile-overlay" aria-label="关闭导航" onClick={() => setMobileNav(false)}/>}
       <main className="main-area">
@@ -451,4 +470,62 @@ export default function App() {
       {view === 'chat' && presentationDemo && <PresentationCanvas onClose={() => setDemo(false)} />}
     </div>
   </AssistantRuntimeProvider>
+}
+
+
+function HistoryRecorder({ threadId, onSnapshot }: {
+  threadId: string
+  onSnapshot: (id: string, messages: SavedMessage[]) => void
+}) {
+  const messages = useAuiState(state => state.thread.messages)
+  const running = useAuiState(state => state.thread.isRunning)
+  const latest = useRef<SavedMessage[]>([])
+
+  useEffect(() => {
+    const snapshot: SavedMessage[] = []
+    for (const message of messages) {
+      if (message.role !== 'user' && message.role !== 'assistant') continue
+      const content: SavedMessage['content'] = []
+      for (const part of message.content) {
+        if ((part.type === 'text' || part.type === 'reasoning') && typeof part.text === 'string' && part.text.length) {
+          content.push({ type: part.type, text: part.text })
+        }
+      }
+      if (content.length) snapshot.push({ id: message.id, role: message.role, content })
+    }
+    latest.current = snapshot
+    const timer = window.setTimeout(() => onSnapshot(threadId, snapshot), running ? 500 : 0)
+    return () => window.clearTimeout(timer)
+  }, [messages, running, threadId, onSnapshot])
+
+  useEffect(() => () => { if (latest.current.length) onSnapshot(threadId, latest.current) }, [threadId, onSnapshot])
+  return null
+}
+
+export default function App() {
+  const [initial] = useState(loadHistory)
+  const [history, setHistory] = useState<HistoryState>(initial.history)
+  const [persistenceWarning, setPersistenceWarning] = useState(initial.warning)
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(HISTORY_KEY, JSON.stringify(history))
+    } catch {
+      setPersistenceWarning(true)
+    }
+  }, [history])
+
+  const onSnapshot = useCallback((id: string, messages: SavedMessage[]) => {
+    setHistory(previous => saveSnapshot(previous, id, messages))
+  }, [])
+  const active = history.threads.find(thread => thread.id === history.activeId)
+  return <Conversation key={history.activeId}
+    activeId={history.activeId} initialMessages={active?.messages || []} threads={history.threads}
+    onSnapshot={onSnapshot} persistenceWarning={persistenceWarning}
+    onNewThread={() => setHistory(previous => newThread(previous))}
+    onSelectThread={id => setHistory(previous => selectThread(previous, id))}
+    onRenameThread={(id, title) => setHistory(previous => renameThread(previous, id, title))}
+    onRemoveThread={id => setHistory(previous => removeThread(previous, id))}
+    onClearHistory={() => setHistory(emptyHistory())}
+  />
 }
