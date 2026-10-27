@@ -60,7 +60,7 @@ activate() {
 }
 case "$COMMAND" in
   install|update)
-    for file in Dockerfile compose.yaml VERSION backend/main.py backend/link_registry.py frontend/package-lock.json; do
+    for file in Dockerfile compose.yaml VERSION backend/main.py backend/link_registry.py frontend/package-lock.json frontend/vitest.config.ts; do
       [[ -f "$SOURCE/$file" ]] || fail "Incomplete source package: missing $file"
     done
     stage=$(mktemp -d "$ROOT/releases/.staging.XXXXXXXX")
@@ -68,7 +68,8 @@ case "$COMMAND" in
     mkdir -p "$stage/backend" "$stage/frontend" "$stage/deploy"
     cp "$SOURCE/"{Dockerfile,.dockerignore,compose.yaml,VERSION,deploy.sh} "$stage/"
     cp "$SOURCE/backend/"{main.py,link_registry.py,requirements.lock} "$stage/backend/"
-    cp "$SOURCE/frontend/"{package.json,package-lock.json,tsconfig.json,vite.config.ts,index.html,collect-licenses.cjs} "$stage/frontend/"
+    # Keep Vitest/jsdom configuration in the staged build, not only in the source checkout.
+    cp "$SOURCE/frontend/"{package.json,package-lock.json,tsconfig.json,vite.config.ts,vitest.config.ts,index.html,collect-licenses.cjs} "$stage/frontend/"
     cp -R "$SOURCE/frontend/src" "$SOURCE/frontend/public" "$stage/frontend/"
     cp "$SOURCE/deploy/"*.example "$stage/deploy/"
     fingerprint=$(cd "$stage" && find . -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c1-12)
