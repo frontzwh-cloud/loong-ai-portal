@@ -113,3 +113,11 @@ bash ~/loong-ai-portal/current/deploy.sh stop
 左侧新增“应用链接管理”，维护 AI Gemba、会议助手下载页、知识助手、Workflow、PDF 工具与办公工具箱的 URL；会议助手只打开已有下载页面，Portal 不管理安装包。修改后无需重启；配置位于 PORTAL_HOME/shared/app-links/app-links.json，更新/回滚不覆盖。
 
 当前 http://loongai 无登录鉴权，因此管理员必须在服务器 portal.env 中配置 PORTAL_ADMIN_TOKEN（本机 openssl rand -hex 32 生成），使用 SSH 端口转发从 http://127.0.0.1:8000 访问管理界面。普通内网页面不能提交密钥。具体步骤见 docs/APP_LINK_ADMIN.md。
+
+## 独立管理地址（无需密钥）
+
+管理配置已改为独立服务，不在普通门户 http://loongai 中暴露编辑入口。Ubuntu 仅绑定 127.0.0.1:8001，管理端通过 SSH 转发访问：
+
+    ssh -L 8001:127.0.0.1:8001 aumoviox@10.223.86.31
+
+随后在电脑浏览器打开 http://127.0.0.1:8001/admin，无需输入 Portal 管理密钥。注意：可访问该管理端口的人都可以修改链接，禁止代理到 http://loongai 或开放给整个内网。如 8001 端口占用，在 /opt/loong-ai-portal/shared/deployment.env 中添加 PORTAL_ADMIN_PORT=8002，并同步调整 SSH 转发端口。原 PORTAL_ADMIN_TOKEN 在此版本不再使用。见 docs/APP_LINK_ADMIN.md。

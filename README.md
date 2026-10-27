@@ -63,3 +63,5 @@ Project authority: [manifest](PROJECT_MANIFEST.md), [overlay](docs/PROJECT_OVERL
 Browser-local conversation history is described in [the history guide](docs/CONVERSATION_HISTORY.md). Using a different hostname, address, port, browser profile or device creates a different local history. Do not use a shared browser for confidential chats.
 
 Application link admin (candidate): see docs/APP_LINK_ADMIN.md. Ordinary http://loongai users may browse configured links but may not edit them. Use an SSH-forwarded localhost browser and a server-local admin token to manage URLs.
+
+Management URL without additional password (candidate): the administrator service listens ONLY on Ubuntu host loopback port 8001, reachable through SSH forwarding at http://127.0.0.1:8001/admin. The public Portal at http://loongai does not expose a management endpoint; do not proxy port 8001 into the employee network. Details: docs/APP_LINK_ADMIN.md.

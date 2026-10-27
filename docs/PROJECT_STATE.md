@@ -38,3 +38,7 @@ Local Docker build/start and recovery checks are execution evidence, not final a
 ## Application link management — 2026-10-27
 
 User requested a small admin interface for existing AI/workplace application URLs, especially Meeting Assistant download PAGE. Candidate implements a fixed allowlist editor, protected backend and server-local persistent app-links JSON. Public URL navigation remains read-only. No SSO, model credentials, app business integration, production merge or real-server deployment was authorized. See APP_LINK_ADMIN.md for security boundary and pending acceptance.
+
+## Address-only admin separation — 2026-10-27
+
+User explicitly requested URL-only management, without another application password. Candidate replaces the token-protected same-process editor with separate admin FastAPI/Compose service on host 127.0.0.1:8001 (default). Public app no longer has mutation routes or admin navigation. Administrators open the separate /admin URL over SSH forwarding; anybody with access to that local-only port is an admin. The shared app-links data file remains authoritative for configured public navigation URLs. Real-server testing and acceptance are pending. See docs/APP_LINK_ADMIN.md.

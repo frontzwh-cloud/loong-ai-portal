@@ -1,34 +1,55 @@
-# LOONG AI Portal — application link administration
-STATUS = IMPLEMENTED_CANDIDATE; RUNTIME_ACCEPTANCE = PENDING
+# LOONG AI Portal — Address-only application link administration
 
-Purpose: Configure launch URLs for the six existing AI/office services. AI Meeting Assistant opens its independent DOWNLOAD PAGE in a new tab; no binary is served by Portal. Presentation remains a UI demonstration, not a live PPT service. Application naming and model-provider credentials are not editable in V0.
+STATUS = CANDIDATE; RUNTIME_ACCEPTANCE = PENDING
 
-## Persistence
-- Existing portal.env link variables remain fallback values until the administrator saves changes.
-- Overrides are saved in shared/app-links/app-links.json under PORTAL_HOME; Compose mounts only this data directory at /data (read-write, container user 10001).
-- The deployment script gives this directory owner 10001 and mode 0700 when run through sudo; saved JSON is atomically written with mode 0600.
-- Updates and rollback retain shared config. Rolling back to a release without this feature may ignore the file, but should not delete it.
-- GET /api/config returns only public link URLs and immediately reflects an admin save. No server restart for URL edits.
+## Architecture
+Management does not require an application password. Security is provided by a SEPARATE
+administrator container with a host loopback-only port, not a secret URL path.
 
-## Administrative access
-- Public http://loongai has no account/SSO. Admin editing is therefore deliberately unavailable on that ordinary entry point.
-- Administrator opens http://127.0.0.1:8000 through SSH port forwarding to the Ubuntu host, then selects 应用链接管理.
-- The backend requires a high-entropy PORTAL_ADMIN_TOKEN (at least 32 characters) in server-local shared/portal.env. This is a bearer credential; it remains in browser in-memory state, never localStorage, URL or frontend assets.
-- The backend also checks loopback Host/Origin (defense in depth, not authentication). Non-browser clients can spoof these, so the secret is mandatory.
-- Manager allows only six fixed IDs; HTTP(S) links up to 2048 characters, no username/password, no control characters or invalid port. Empty value disables launch. Public users cannot write links.
-- This is not a general administrative security framework. An accessible multi-user management console must first have HTTPS and user-level identity/authorization.
+- Public Portal (service: portal): host 127.0.0.1:8000 behind the existing employee
+  proxy. Public backend has NO GET/PUT /api/admin/links endpoints and frontend does
+  not show management navigation.
+- Private Admin (service: admin): separate process with host port
+  127.0.0.1:8001 by default. Management page: /admin; writes are possible only here.
+- Administrator workstation: SSH port forwarding command:
+  ssh -L 8001:127.0.0.1:8001 aumoviox@10.223.86.31
+  Open http://127.0.0.1:8001/admin in that workstation browser.
+- Admin API uses Host and Origin validation for defense in depth against browser
+  rebinding/CSRF, but these headers are not authentication. The Docker binding and
+  SSH controls determine who can connect.
 
-## Installation on existing Ubuntu server
-1. Keep all existing AI settings as is. In /opt/loong-ai-portal/shared/portal.env add PORTAL_ADMIN_TOKEN=<locally_generated_64_hex_chars>. Generate locally using openssl rand -hex 32; never commit or share the token.
-2. Obtain a reviewed fixed-commit source snapshot. Update via sudo env PORTAL_HOME=/opt/loong-ai-portal bash <source-dir>/deploy.sh update. The upgraded container reads the new token on startup.
-3. Use authorized SSH: ssh -L 8000:127.0.0.1:8000 aumoviox@10.223.86.31. In the desktop browser open http://127.0.0.1:8000 and then 应用链接管理.
-4. Enter the admin token, edit the meeting-assistant DOWNLOAD PAGE URL and save. The employee-facing http://loongai navigation updates through /api/config and opens the configured page in a new browser tab.
-5. This installation sequence is not executed by this PR. Server connectivity, image build, Compose compatibility and real browser operations must be checked on the host.
+Anyone with access to this private port can change application URLs. Do NOT publish
+the port on LAN, add a public reverse proxy path to admin, or bind to 0.0.0.0.
+If remote multi-user management becomes necessary, add approved HTTPS+SSO first.
+
+## Config and updates
+- Existing six service IDs, including Meeting Assistant DOWNLOAD PAGE, remain fixed.
+  Only public HTTP(S) navigation URLs can be changed (max length 2048, no embedded
+  username/password). Blank = disabled.
+- Older public URL environment variables remain fallback until a saved override exists.
+- Durable shared file: /opt/loong-ai-portal/shared/app-links/app-links.json
+  (container path /data/app-links.json). File mode 0600, owned by container user 10001.
+- Public container mounts shared app-links directory READ ONLY; admin mounts it
+  READ WRITE. Existing portal.env model settings are retained.
+- Old PORTAL_ADMIN_TOKEN in portal.env is ignored in the new version. Can be removed
+  separately by an authorized administrator, never pasted into chat.
+- No restart after modifying URLs; ordinary Portal browsers refresh to reload links.
+- The deployment script checks both containers using Compose wait/health, preserves
+  the shared configuration on update and removes orphan admin containers on rollback
+  to an older single-service version.
+
+## Port conflicts
+PORTAL_ADMIN_PORT defaults to 8001. If occupied, set PORTAL_ADMIN_PORT=8002 in
+/opt/loong-ai-portal/shared/deployment.env before upgrade. Adjust SSH forwarding
+and browser port accordingly. Do not change the fixed loopback host binding.
 
 ## Acceptance
-- No key = feature disabled. Wrong key, remote Host/Origin = denied.
-- Valid save persists in shared JSON and reflects through GET /api/config.
-- Invalid/unknown/oversized links rejected; no old configuration overwritten.
-- Shared app links survive release swap and rollback.
-- Do not alter AI provider credentials, permissions or downstream systems. No public admin writes.
-- Tests added in Python and Vitest; execution and real-server acceptance are pending.
+1. Main Portal works at http://loongai, GET /api/config read-only.
+2. Main Portal GET and PUT /api/admin/links both return 404.
+3. Private 127.0.0.1:8001/api/health returns status ok.
+4. Private /admin has NO password form, can save/restore meeting download URL.
+5. Public GET /api/config reflects saved link after refresh.
+6. Container port publish is host 127.0.0.1 only and cannot be reached from LAN IP.
+7. Frontend/backend tests, Docker health, reverse proxy and rollback checks pass.
+
+This code is NOT evidence of a completed server deployment or user acceptance.
