@@ -6,7 +6,7 @@ from backend import main
 
 @pytest.fixture(autouse=True)
 def config(monkeypatch):
-    for name in ['DEEPSEEK_API_KEY', 'DEEPSEEK_MODEL', 'GEMBA_URL']:
+    for name in ['DEEPSEEK_API_KEY', 'DEEPSEEK_MODEL', 'GEMBA_URL', 'DEEPSEEK_VERIFY_SSL']:
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv('PORTAL_DEMO_MODE', 'false')
     monkeypatch.setenv('DEEPSEEK_BASE_URL', 'https://provider.example/v1')
@@ -85,3 +85,25 @@ def test_static_serving_and_no_env_exposure():
     assert client.get('/loong-ai-mascot.png').headers['content-type']=='image/png'
     for path in ['/backend/.env','/.env','/api/unknown']:
         assert client.get(path).status_code==404
+
+
+def test_internal_service_can_disable_tls_and_omit_key(monkeypatch):
+    monkeypatch.setenv('DEEPSEEK_BASE_URL','https://vio.automotive-wan.com:446')
+    monkeypatch.setenv('DEEPSEEK_MODEL','Loong_AI')
+    monkeypatch.setenv('DEEPSEEK_VERIFY_SSL','false')
+    original = httpx.AsyncClient
+    def handler(request):
+        assert str(request.url)=='https://vio.automotive-wan.com:446/v1/chat/completions'
+        assert 'authorization' not in request.headers
+        return httpx.Response(200,text='data: {"choices":[{"delta":{"content":"ok"}}]}\n\ndata: [DONE]\n')
+    def factory(**kwargs):
+        assert kwargs['verify'] is False
+        return original(transport=httpx.MockTransport(handler), **kwargs)
+    monkeypatch.setattr(main.httpx,'AsyncClient',factory)
+    assert events(send())[-1]['type']=='completed'
+    assert client.get('/api/health').json()['deepseek']=='configured'
+
+def test_tls_opt_out_does_not_apply_to_other_host(monkeypatch):
+    monkeypatch.setenv('DEEPSEEK_VERIFY_SSL','false')
+    mock_provider(monkeypatch,'data: [DONE]\n')
+    assert events(send())[-1]['type']=='completed'

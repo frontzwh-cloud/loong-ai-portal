@@ -89,7 +89,8 @@ async def stream_chat(messages: list[dict[str, str]]) -> AsyncIterator[str]:
     api_key = os.getenv("DEEPSEEK_API_KEY", "").strip()
     base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com").rstrip("/")
     model = os.getenv("DEEPSEEK_MODEL", "").strip()
-    if not api_key or not model:
+    internal_no_key = bool(safe_url(base_url)) and urlsplit(base_url).hostname == "vio.automotive-wan.com"
+    if not model or (not api_key and not internal_no_key):
         yield event("error", "AI 待配置：请在 backend/.env 设置 DEEPSEEK_API_KEY 和 DEEPSEEK_MODEL，然后重启。可设置 PORTAL_DEMO_MODE=true 体验本地演示。")
         return
     if not safe_url(base_url) or urlsplit(base_url).scheme != "https" or urlsplit(base_url).query or urlsplit(base_url).fragment:
@@ -97,10 +98,13 @@ async def stream_chat(messages: list[dict[str, str]]) -> AsyncIterator[str]:
         return
     endpoint = f"{base_url}/chat/completions" if base_url.endswith("/v1") else f"{base_url}/v1/chat/completions"
     payload = {"model": model, "messages": messages, "stream": True}
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    headers = {"Content-Type": "application/json"}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+    verify_ssl = not (internal_no_key and os.getenv("DEEPSEEK_VERIFY_SSL", "true").lower() == "false")
     try:
-        # httpx defaults to certificate verification; never bypass TLS errors.
-        async with httpx.AsyncClient(timeout=httpx.Timeout(90.0, connect=10.0)) as client:
+        # Explicit opt-out is scoped to the configured internal service only.
+        async with httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=10.0), verify=verify_ssl) as client:
             async with client.stream("POST", endpoint, json=payload, headers=headers) as response:
                 if response.status_code >= 400:
                     yield event("error", f"模型请求失败（HTTP {response.status_code}）。请检查模型、密钥、额度和服务地址后重试。")
@@ -140,8 +144,11 @@ async def stream_chat(messages: list[dict[str, str]]) -> AsyncIterator[str]:
 
 @app.get("/api/health")
 async def health():
+    base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+    internal = bool(safe_url(base_url)) and urlsplit(base_url).hostname == "vio.automotive-wan.com"
+    configured = bool(os.getenv("DEEPSEEK_MODEL", "").strip() and (internal or os.getenv("DEEPSEEK_API_KEY", "").strip()))
     return {"status": "ok", "app": "loong-ai-portal", "mode": mode(),
-            "deepseek": "configured" if os.getenv("DEEPSEEK_API_KEY", "").strip() and os.getenv("DEEPSEEK_MODEL", "").strip() else "not_configured"}
+            "deepseek": "configured" if configured else "not_configured"}
 
 
 @app.get("/api/config")

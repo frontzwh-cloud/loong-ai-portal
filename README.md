@@ -12,7 +12,7 @@ The default demo makes no AI requests and visibly labels its canned replies. For
 - Bounded in-memory conversations; navigation preserves the conversation, refresh clears it.
 - Searchable AI applications, office tools and download links; absent or invalid links are disabled.
 - Presentation Canvas is explicitly simulated, with no PPTX generation or real integration.
-- Backend serves the compiled UI on loopback. Secrets stay server-side. TLS verification is enabled.
+- Backend serves the compiled UI on loopback. Secrets stay server-side. TLS verification is enabled by default; it can be explicitly disabled only for the approved internal host `vio.automotive-wan.com`.
 - No SSO, enterprise data access, downstream API integration or production deployment.
 
 ## Ubuntu deployment

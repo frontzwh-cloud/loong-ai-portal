@@ -58,7 +58,7 @@ DEEPSEEK_API_KEY=你自己的密钥
 bash ~/loong-ai-portal/current/deploy.sh restart
 ```
 
-Base URL 支持有或没有结尾 `/v1` 的 HTTPS OpenAI-compatible Chat Completions SSE 服务。证书校验开启，模型可用性由你的服务商决定。“AI 已配置”仅代表设置了密钥和模型，不代表服务验证成功。真实 AI 连接尚未用真实凭据验收。公司数据只能发给获批准的模型。
+Base URL 支持有或没有结尾 `/v1` 的 HTTPS OpenAI-compatible Chat Completions SSE 服务。默认启用证书校验。按内网服务要求，可仅对 vio.automotive-wan.com 设置 DEEPSEEK_VERIFY_SSL=false；关闭校验会使连接无法验证服务身份，请仅在已获批准的网络环境使用。该内网服务可留空密钥；其他服务仍要求密钥。模型可用性由你的服务商决定。“AI 已配置”仅代表设置了密钥和模型，不代表服务验证成功。真实 AI 连接尚未用真实凭据验收。公司数据只能发给获批准的模型。
 
 办公/AI 链接也在此文件中：`GEMBA_URL`、`MEETING_DOWNLOAD_URL`、`KNOWLEDGE_URL`、`WORKFLOW_URL`、`PDF_TOOL_URL`、`OFFICE_TOOLS_URL`。只填真实 HTTP(S) 地址，不放凭据。配置后重启、刷新即可，无须重新构建。
 
@@ -106,4 +106,4 @@ bash ~/loong-ai-portal/current/deploy.sh stop
 
 ## 构建环境说明
 
-普通 Ubuntu 无需自定义证书。若已有获批准的企业代理 CA，可通过 `PORTAL_BUILD_CA=/已有/CA文件` 将它作为临时 BuildKit secret 提供给依赖下载；不复制进最终镜像，也不修改系统信任库。不要使用未知证书或关闭校验。此执行环境用它继承原有代理信任完成构建；交付镜像没有该代理 CA 或代理配置。
+源码构建需要正常访问 Docker Hub、npm 和 PyPI。若网络使用企业代理，请联系 IT 配置构建环境。内网 AI 服务的证书选项只影响 AI 请求，不影响构建依赖下载。
