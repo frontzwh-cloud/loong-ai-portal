@@ -107,3 +107,78 @@ def test_tls_opt_out_does_not_apply_to_other_host(monkeypatch):
     monkeypatch.setenv('DEEPSEEK_VERIFY_SSL','false')
     mock_provider(monkeypatch,'data: [DONE]\n')
     assert events(send())[-1]['type']=='completed'
+
+
+def admin_headers(token="x" * 64, origin="http://127.0.0.1:8000", host="127.0.0.1:8000"):
+    return {"Host": host, "Origin": origin, "Authorization": "Bearer " + token}
+
+
+@pytest.fixture
+def admin_registry(monkeypatch, tmp_path):
+    monkeypatch.setenv("PORTAL_LINKS_FILE", str(tmp_path / "app-links.json"))
+    monkeypatch.setenv("PORTAL_ADMIN_TOKEN", "x" * 64)
+    yield tmp_path / "app-links.json"
+
+
+def test_admin_disabled_without_key(monkeypatch):
+    monkeypatch.delenv("PORTAL_ADMIN_TOKEN", raising=False)
+    assert client.get("/api/admin/links", headers=admin_headers()).status_code == 503
+
+
+def test_admin_rejects_remote_and_wrong_credentials(admin_registry):
+    for headers, code in [
+        (admin_headers(token="incorrect-token"), 401),
+        (admin_headers(host="loongai"), 403),
+        (admin_headers(origin="http://loongai"), 403),
+    ]:
+        assert client.put("/api/admin/links", headers=headers, json={"links": {}}).status_code == code
+    assert not admin_registry.exists()
+    response = client.get("/api/admin/links", headers={"Host":"127.0.0.1:8000", "Authorization":"Bearer " + "x"*64})
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
+
+
+def test_admin_saves_meeting_download_page_without_restart(admin_registry, monkeypatch):
+    monkeypatch.setenv("MEETING_DOWNLOAD_URL", "http://existing.internal/download")
+    original = client.get("/api/config").json()["links"]
+    assert original["meeting"] == "http://existing.internal/download"
+    values = {key: "" for key in main.LINK_ENV}
+    values["meeting"] = "https://download.example.test/meeting-assistant"
+    values["gemba"] = "http://intranet.example.test/gemba"
+    response = client.put("/api/admin/links", headers=admin_headers(), json={"links": values})
+    assert response.status_code == 200
+    assert response.json()["links"]["meeting"] == values["meeting"]
+    assert client.get("/api/config").json()["links"]["meeting"] == values["meeting"]
+    assert json.loads(admin_registry.read_text())["meeting"] == values["meeting"]
+    assert admin_registry.stat().st_mode & 0o777 == 0o600
+    # Read from the persistent path, rather than a module-level in-memory cache.
+    assert client.get("/api/config").json()["links"]["gemba"] == values["gemba"]
+
+
+@pytest.mark.parametrize("malicious", [
+    "javascript:alert(1)", "file:///etc/passwd", "https://u:password@example.com/",
+    "https://example.com/bad\nheader", " https://example.com/", "https://example.com/" + "x"*2100,
+])
+def test_admin_rejects_bad_link_without_overwriting_registry(admin_registry, malicious):
+    values = {key: "" for key in main.LINK_ENV}
+    values["meeting"] = malicious
+    response = client.put("/api/admin/links", headers=admin_headers(), json={"links": values})
+    assert response.status_code == 422
+    assert not admin_registry.exists()
+
+
+def test_admin_rejects_unknown_keys_and_large_payload(admin_registry):
+    unknown = {key: "" for key in main.LINK_ENV}
+    unknown["admin"] = "https://example.com"
+    assert client.put("/api/admin/links", headers=admin_headers(), json={"links": unknown}).status_code == 422
+    assert client.put("/api/admin/links", headers=admin_headers(), content=b"x"*262145).status_code == 413
+    assert not admin_registry.exists()
+
+
+def test_admin_does_not_serve_admin_configuration_as_static(admin_registry):
+    values = {key: "" for key in main.LINK_ENV}
+    values["meeting"] = "http://example.test/download"
+    assert client.put("/api/admin/links", headers=admin_headers(), json={"links": values}).status_code == 200
+    for name in ["/data/app-links.json", "/backend/link_registry.py", "/api/admin/links"]:
+        response = client.get(name) if name != "/api/admin/links" else client.get(name, headers={"Host":"loongai"})
+        assert response.status_code in (403, 404)
