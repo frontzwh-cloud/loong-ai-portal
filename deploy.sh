@@ -23,8 +23,8 @@ mkdir -p "$LINKS_DIR"
 if [[ "$(id -u)" == "0" ]]; then
   chown 10001:10001 "$LINKS_DIR"
   chmod 0700 "$LINKS_DIR"
-elif [[ ! -w "$LINKS_DIR" ]]; then
-  fail 'App links directory must be writable by container user 10001. Re-run deployment as root/sudo.'
+elif [[ "$(stat -c %u "$LINKS_DIR")" != "10001" ]]; then
+  fail 'App links directory must belong to container user 10001. Re-run deployment as root/sudo.'
 fi
 [[ -f "$CONFIG" ]] || cp "$SOURCE/deploy/portal.env.example" "$CONFIG"
 [[ -f "$SETTINGS" ]] || cp "$SOURCE/deploy/deployment.env.example" "$SETTINGS"
