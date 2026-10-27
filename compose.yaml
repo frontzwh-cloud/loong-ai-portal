@@ -6,6 +6,10 @@ services:
     env_file:
       - path: ${PORTAL_CONFIG:?Use deploy.sh to select server configuration}
         format: raw
+    environment:
+      PORTAL_LINKS_FILE: /data/app-links.json
+    volumes:
+      - ${PORTAL_LINKS_DIR:?Use deploy.sh for persistent app links}:/data:rw
     ports:
       - "${PORTAL_BIND:-127.0.0.1}:${PORTAL_PORT:-8000}:8000"
     restart: unless-stopped

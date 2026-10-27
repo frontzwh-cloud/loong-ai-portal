@@ -3,11 +3,12 @@ import json
 import os
 from pathlib import Path
 from typing import AsyncIterator, Literal
+from .link_registry import public_links, require_local_admin, save_links, LINK_ENV
 from urllib.parse import urlsplit
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -25,7 +26,7 @@ class BodyLimit:
         self.app = app
 
     async def __call__(self, scope, receive, send):
-        if scope["type"] != "http" or scope["method"] != "POST":
+        if scope["type"] != "http" or scope["method"] not in ("POST", "PUT"):
             return await self.app(scope, receive, send)
         chunks, size = [], 0
         while True:
@@ -153,10 +154,31 @@ async def health():
 
 @app.get("/api/config")
 async def config():
-    # Explicit allowlist only. Never serialize the environment or API credentials.
-    keys = {"gemba": "GEMBA_URL", "meeting": "MEETING_DOWNLOAD_URL", "knowledge": "KNOWLEDGE_URL",
-            "workflow": "WORKFLOW_URL", "pdf": "PDF_TOOL_URL", "tools": "OFFICE_TOOLS_URL"}
-    return {"links": {key: safe_url(os.getenv(value, "")) for key, value in keys.items()}}
+    # Browser-visible public navigation destinations only. Never return secrets.
+    try:
+        return {"links": public_links()}
+    except RuntimeError:
+        raise HTTPException(503, "应用链接配置暂时不可用。")
+
+
+class AdminLinksUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    links: dict[str, str] = Field(max_length=len(LINK_ENV))
+
+
+@app.get("/api/admin/links")
+async def get_admin_links(request: Request):
+    require_local_admin(request)
+    try:
+        return JSONResponse({"links": public_links()}, headers={"Cache-Control": "no-store"})
+    except RuntimeError:
+        raise HTTPException(503, "应用链接配置暂时不可用。")
+
+
+@app.put("/api/admin/links")
+async def put_admin_links(request: Request, update: AdminLinksUpdate):
+    require_local_admin(request)
+    return JSONResponse({"links": save_links(update.links)}, headers={"Cache-Control": "no-store"})
 
 
 @app.post("/api/chat")

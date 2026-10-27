@@ -18,11 +18,19 @@ exec 9>"$ROOT/.deploy.lock"
 flock -n 9 || fail 'Another deployment operation is active; retry after it finishes.'
 CONFIG="$ROOT/shared/portal.env"
 SETTINGS="$ROOT/shared/deployment.env"
+LINKS_DIR="$ROOT/shared/app-links"
+mkdir -p "$LINKS_DIR"
+if [[ "$(id -u)" == "0" ]]; then
+  chown 10001:10001 "$LINKS_DIR"
+  chmod 0700 "$LINKS_DIR"
+elif [[ ! -w "$LINKS_DIR" ]]; then
+  fail 'App links directory must be writable by container user 10001. Re-run deployment as root/sudo.'
+fi
 [[ -f "$CONFIG" ]] || cp "$SOURCE/deploy/portal.env.example" "$CONFIG"
 [[ -f "$SETTINGS" ]] || cp "$SOURCE/deploy/deployment.env.example" "$SETTINGS"
 compose() {
   local release=$1; shift
-  PORTAL_CONFIG="$CONFIG" PORTAL_RELEASE="$(basename -- "$release")" \
+  PORTAL_CONFIG="$CONFIG" PORTAL_RELEASE="$(basename -- "$release")" PORTAL_LINKS_DIR="$LINKS_DIR" \
     docker compose --project-name "$PROJECT" --env-file "$SETTINGS" -f "$release/compose.yaml" "$@"
 }
 current() { [[ -L "$ROOT/current" ]] && readlink -f -- "$ROOT/current" 2>/dev/null || true; }
@@ -52,14 +60,14 @@ activate() {
 }
 case "$COMMAND" in
   install|update)
-    for file in Dockerfile compose.yaml VERSION backend/main.py frontend/package-lock.json; do
+    for file in Dockerfile compose.yaml VERSION backend/main.py backend/link_registry.py frontend/package-lock.json; do
       [[ -f "$SOURCE/$file" ]] || fail "Incomplete source package: missing $file"
     done
     stage=$(mktemp -d "$ROOT/releases/.staging.XXXXXXXX")
     trap '[[ -z "${stage:-}" ]] || rm -rf -- "$stage"' EXIT
     mkdir -p "$stage/backend" "$stage/frontend" "$stage/deploy"
     cp "$SOURCE/"{Dockerfile,.dockerignore,compose.yaml,VERSION,deploy.sh} "$stage/"
-    cp "$SOURCE/backend/"{main.py,requirements.lock} "$stage/backend/"
+    cp "$SOURCE/backend/"{main.py,link_registry.py,requirements.lock} "$stage/backend/"
     cp "$SOURCE/frontend/"{package.json,package-lock.json,tsconfig.json,vite.config.ts,index.html,collect-licenses.cjs} "$stage/frontend/"
     cp -R "$SOURCE/frontend/src" "$SOURCE/frontend/public" "$stage/frontend/"
     cp "$SOURCE/deploy/"*.example "$stage/deploy/"
