@@ -137,7 +137,7 @@ describe('LOONG AI Portal UI prototype', () => {
     fireEvent.click(screen.getByRole('button', { name: '新对话' }))
     expect(screen.getByText('你好，我是龙小智')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: '打开对话：我的本地历史测试' }))
-    expect(screen.getByText('我的本地历史测试')).toBeTruthy()
+    expect(screen.getAllByText('我的本地历史测试').length).toBeGreaterThan(0)
     vi.stubGlobal('confirm', vi.fn(() => true))
     fireEvent.click(screen.getByRole('button', { name: '删除对话：我的本地历史测试' }))
     await waitFor(() => expect(screen.queryByRole('button', { name: '打开对话：我的本地历史测试' })).toBeNull())

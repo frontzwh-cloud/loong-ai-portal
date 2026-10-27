@@ -390,7 +390,10 @@ function Conversation({ activeId, initialMessages, threads, onSnapshot, onNewThr
     },
   }), [])
   const [seed] = useState(initialMessages)
-  const options = useMemo(() => ({ initialMessages: seed }), [seed])
+  // Separate the discriminated message roles for assistant-ui's ThreadMessageLike union.
+  const options = useMemo(() => ({ initialMessages: seed.map(message => message.role === 'user'
+    ? { id: message.id, role: 'user' as const, content: message.content.filter(part => part.type === 'text') }
+    : { id: message.id, role: 'assistant' as const, content: message.content }) }), [seed])
   const runtime = useLocalRuntime(adapter, options)
 
   useEffect(() => {

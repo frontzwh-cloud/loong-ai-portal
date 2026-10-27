@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Check, MessageSquareText, Pencil, Trash2, X } from 'lucide-react'
-import type { SavedThread } from './history'
+import { MAX_THREADS, type SavedThread } from './history'
 
 export function ConversationHistory({ threads, currentId, onSelect, onRename, onDelete, onClear }: {
   threads: SavedThread[]
@@ -62,6 +62,6 @@ export function ConversationHistory({ threads, currentId, onSelect, onRename, on
           </>}
       </div>)}
     </div>
-    <p className="history-note">仅保存在此浏览器 · 最近 {20} 个对话</p>
+    <p className="history-note">仅保存在此浏览器 · 最近 {MAX_THREADS} 个对话</p>
   </section>
 }
