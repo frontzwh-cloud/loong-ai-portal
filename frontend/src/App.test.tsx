@@ -121,4 +121,30 @@ describe('LOONG AI Portal UI prototype', () => {
     fireEvent.click(screen.getByRole('button', { name: '龙小智助手' }))
     expect(screen.getByText('应用推荐 · 关键词演示')).toBeTruthy()
   })
+
+  it('keeps one chat across reloads, then deletes it without resurrecting the old content', async () => {
+    const first = render(<App />)
+    fireEvent.change(screen.getByPlaceholderText('向龙小智提问，或描述你想完成的工作...'), {
+      target: { value: '我的本地历史测试' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: '发送消息' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: '打开对话：我的本地历史测试' })).toBeTruthy())
+    await waitFor(() => expect(window.localStorage.getItem('loong-ai-portal.chat-history.v1')).toContain('我的本地历史测试'))
+    first.unmount()
+
+    const second = render(<App />)
+    expect(screen.getByRole('button', { name: '打开对话：我的本地历史测试' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: '新对话' }))
+    expect(screen.getByText('你好，我是龙小智')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: '打开对话：我的本地历史测试' }))
+    expect(screen.getByText('我的本地历史测试')).toBeTruthy()
+    vi.stubGlobal('confirm', vi.fn(() => true))
+    fireEvent.click(screen.getByRole('button', { name: '删除对话：我的本地历史测试' }))
+    await waitFor(() => expect(screen.queryByRole('button', { name: '打开对话：我的本地历史测试' })).toBeNull())
+    second.unmount()
+
+    render(<App />)
+    expect(screen.queryByRole('button', { name: '打开对话：我的本地历史测试' })).toBeNull()
+  })
+
 })
