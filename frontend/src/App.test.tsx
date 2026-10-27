@@ -12,10 +12,9 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
 describe('LOONG AI Portal UI prototype', () => {
-  it('offers a separate link administration view', () => {
+  it('does not expose the private admin editor in public navigation', () => {
     render(<App />)
-    fireEvent.click(screen.getByRole('button', { name: '应用链接管理' }))
-    expect(screen.getByRole('heading', { name: '应用链接管理' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: '应用链接管理' })).toBeNull()
   })
 
   it('shows the chat-first entry point', () => {

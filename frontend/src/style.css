@@ -473,3 +473,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus
   .admin-footer { flex-wrap: wrap; }
   .admin-footer span { flex: 1 0 100%; }
 }
+
+
+/* Separate admin-only origin: public Portal contains no edit link or write API. */
+.admin-standalone { min-height: 100dvh; background: #fff; }
+.admin-standalone-brand { height: 66px; border-bottom: 1px solid #efefed; display: flex;
+  align-items: center; gap: 18px; padding: 0 clamp(22px,6vw,90px); }
+.admin-standalone-brand strong { font-size: 16px; letter-spacing: -.4px; }
+.admin-standalone-brand span { color: #8f8882; font-size: 12px; }
+.admin-standalone .admin-page { max-width: 1120px; margin: auto; }

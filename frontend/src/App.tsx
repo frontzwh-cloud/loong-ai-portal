@@ -7,16 +7,15 @@ import {
   ArrowDownToLine, ArrowRight, ArrowUp, BookOpen, Check, ChevronDown, ChevronLeft,
   ChevronRight, ExternalLink, FileText, Grid2X2, Home, LayoutPanelLeft,
   Link2, Menu, MessageSquareText, Mic2, Monitor, PanelRightClose, Copy, RefreshCw,
-  Plus, Search, Settings2, Sparkles, X,
+  Plus, Search, Sparkles, X,
 } from 'lucide-react'
 import { applyRuntimeLinks, catalog, type Service, type ServiceCategory } from './catalog'
 import { MarkdownMessageText } from './MarkdownMessageText'
 import { ConversationHistory } from './ConversationHistory'
-import { AdminLinks } from './AdminLinks'
 import { emptyHistory, loadHistory, newThread, removeThread, renameThread, saveSnapshot, selectThread,
   HISTORY_KEY, type HistoryState, type SavedMessage, type SavedThread } from './history'
 
-type View = 'chat' | 'services' | 'admin'
+type View = 'chat' | 'services'
 type Filter = 'all' | 'download' | ServiceCategory
 type StreamEvent = { type: string; content?: string }
 
@@ -450,11 +449,6 @@ function Conversation({ activeId, initialMessages, threads, onSnapshot, onNewThr
           <button type="button" className={view === 'services' && filter === 'office' ? 'nav-item active' : 'nav-item'} onClick={() => navigate('services','office')}><Link2 size={18}/> 办公服务</button>
           <button type="button" className={view === 'services' && filter === 'download' ? 'nav-item active' : 'nav-item'} onClick={() => navigate('services','download')}><ArrowDownToLine size={18}/> 下载中心</button>
         </nav>
-        <div className="admin-nav-wrap">
-          <button type="button" className={view === 'admin' ? 'nav-item active' : 'nav-item'} onClick={() => navigate('admin')}>
-            <Settings2 size={18}/> 应用链接管理
-          </button>
-        </div>
         <ConversationHistory threads={threads} currentId={activeId} onSelect={switchThread}
           onRename={onRenameThread} onDelete={deleteThread}
           onClear={() => { runtime.thread.cancelRun(); onClearHistory() }}/>
@@ -465,7 +459,7 @@ function Conversation({ activeId, initialMessages, threads, onSnapshot, onNewThr
         <header className="topbar">
           <div className="topbar-left">
             <button type="button" className="icon-action mobile-menu" aria-expanded={mobileNav} aria-controls="portal-sidebar" onClick={() => setMobileNav(true)} aria-label="打开导航"><Menu size={19}/></button>
-            <div className="topbar-breadcrumb"><Home size={16}/><ChevronRight size={14}/><span>{view === 'chat' ? '龙小智助手' : view === 'admin' ? '应用链接管理' : '服务中心'}</span></div>
+            <div className="topbar-breadcrumb"><Home size={16}/><ChevronRight size={14}/><span>{view === 'chat' ? '龙小智助手' : '服务中心'}</span></div>
             {presentationDemo && view === 'chat' && <span className="active-task-badge"><FileText size={14}/> Presentation · Demo</span>}
           </div>
           <div className="topbar-right"><span className="system-state"><i className={apiState === 'ready' ? 'status-dot green' : 'status-dot'} />{apiState === 'demo' ? '本地演示 · 非真实 AI' : apiState === 'ready' ? 'AI 已配置' : apiState === 'missing' ? 'AI 待配置' : '后端未连接'}</span>
@@ -476,7 +470,6 @@ function Conversation({ activeId, initialMessages, threads, onSnapshot, onNewThr
           onOpenServices={() => navigate('services')}
           onOpenService={openService} onBrowseCategory={filter => navigate('services', filter)}
           onOpenRecommendation={() => recommendation && (recommendation.url ? openService(recommendation) : navigate('services', recommendation.category))}/> :
-          view === 'admin' ? <AdminLinks onSaved={links => { applyRuntimeLinks(links); setConfigVersion(v => v + 1) }}/> :
           <ServiceCenter filter={filter} onFilter={setFilter} onOpen={openService} onBack={() => navigate('chat')}/>}
       </main>
       {view === 'chat' && presentationDemo && <PresentationCanvas onClose={() => setDemo(false)} />}
