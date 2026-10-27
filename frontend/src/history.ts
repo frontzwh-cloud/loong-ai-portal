@@ -111,7 +111,6 @@ export function selectThread(state: HistoryState, threadId: string): HistoryStat
 }
 
 export function newThread(state: HistoryState): HistoryState {
-  if (!state.threads.some(t => t.id === state.activeId)) return state
   return { ...state, activeId: id() }
 }
 

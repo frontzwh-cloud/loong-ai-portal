@@ -389,7 +389,9 @@ function Conversation({ activeId, initialMessages, threads, onSnapshot, onNewThr
       }
     },
   }), [])
-  const runtime = useLocalRuntime(adapter, { initialMessages })
+  const [seed] = useState(initialMessages)
+  const options = useMemo(() => ({ initialMessages: seed }), [seed])
+  const runtime = useLocalRuntime(adapter, options)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -505,6 +507,7 @@ function HistoryRecorder({ threadId, onSnapshot }: {
 export default function App() {
   const [initial] = useState(loadHistory)
   const [history, setHistory] = useState<HistoryState>(initial.history)
+  const deletedIds = useRef(new Set<string>())
   const [persistenceWarning, setPersistenceWarning] = useState(initial.warning)
 
   useEffect(() => {
@@ -516,6 +519,7 @@ export default function App() {
   }, [history])
 
   const onSnapshot = useCallback((id: string, messages: SavedMessage[]) => {
+    if (deletedIds.current.has(id)) return
     setHistory(previous => saveSnapshot(previous, id, messages))
   }, [])
   const active = history.threads.find(thread => thread.id === history.activeId)
@@ -525,7 +529,11 @@ export default function App() {
     onNewThread={() => setHistory(previous => newThread(previous))}
     onSelectThread={id => setHistory(previous => selectThread(previous, id))}
     onRenameThread={(id, title) => setHistory(previous => renameThread(previous, id, title))}
-    onRemoveThread={id => setHistory(previous => removeThread(previous, id))}
-    onClearHistory={() => setHistory(emptyHistory())}
+    onRemoveThread={id => { deletedIds.current.add(id); setHistory(previous => removeThread(previous, id)) }}
+    onClearHistory={() => {
+      deletedIds.current.add(history.activeId)
+      history.threads.forEach(thread => deletedIds.current.add(thread.id))
+      setHistory(emptyHistory())
+    }}
   />
 }

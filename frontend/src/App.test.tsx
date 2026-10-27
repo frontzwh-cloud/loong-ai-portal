@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import App from './App'
 
 beforeEach(() => {
+  window.localStorage.clear()
   vi.stubGlobal('fetch', vi.fn(async () => ({
     ok: true,
     json: async () => ({ status: 'ok', deepseek: 'not_configured' }),
