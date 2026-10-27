@@ -96,7 +96,7 @@ async def stream_chat(messages: list[dict[str, str]]) -> AsyncIterator[str]:
     if not safe_url(base_url) or urlsplit(base_url).scheme != "https" or urlsplit(base_url).query or urlsplit(base_url).fragment:
         yield event("error", "模型地址无效：请使用不含账号、查询参数或片段的 HTTPS Base URL。")
         return
-    endpoint = f"{base_url}/chat/completions" if base_url.endswith("/v1") else f"{base_url}/v1/chat/completions"
+    endpoint = f"{base_url}/chat/completions" if internal_no_key or base_url.endswith("/v1") else f"{base_url}/v1/chat/completions"
     payload = {"model": model, "messages": messages, "stream": True}
     headers = {"Content-Type": "application/json"}
     if api_key:

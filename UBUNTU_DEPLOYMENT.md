@@ -58,7 +58,7 @@ DEEPSEEK_API_KEY=你自己的密钥
 bash ~/loong-ai-portal/current/deploy.sh restart
 ```
 
-Base URL 支持有或没有结尾 `/v1` 的 HTTPS OpenAI-compatible Chat Completions SSE 服务。默认启用证书校验。按内网服务要求，可仅对 vio.automotive-wan.com 设置 DEEPSEEK_VERIFY_SSL=false；关闭校验会使连接无法验证服务身份，请仅在已获批准的网络环境使用。该内网服务可留空密钥；其他服务仍要求密钥。模型可用性由你的服务商决定。“AI 已配置”仅代表设置了密钥和模型，不代表服务验证成功。真实 AI 连接尚未用真实凭据验收。公司数据只能发给获批准的模型。
+Base URL 支持有或没有结尾 `/v1` 的 HTTPS OpenAI-compatible Chat Completions SSE 服务。默认启用证书校验。按内网服务要求，可仅对 vio.automotive-wan.com 设置 DEEPSEEK_VERIFY_SSL=false；关闭校验会使连接无法验证服务身份，请仅在已获批准的网络环境使用。该内网服务可留空密钥，并使用 Base URL 后接 `/chat/completions`；其他服务仍要求密钥。模型可用性由你的服务商决定。“AI 已配置”仅代表设置了密钥和模型，不代表服务验证成功。真实 AI 连接尚未用真实凭据验收。公司数据只能发给获批准的模型。
 
 办公/AI 链接也在此文件中：`GEMBA_URL`、`MEETING_DOWNLOAD_URL`、`KNOWLEDGE_URL`、`WORKFLOW_URL`、`PDF_TOOL_URL`、`OFFICE_TOOLS_URL`。只填真实 HTTP(S) 地址，不放凭据。配置后重启、刷新即可，无须重新构建。
 

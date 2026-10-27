@@ -93,7 +93,7 @@ def test_internal_service_can_disable_tls_and_omit_key(monkeypatch):
     monkeypatch.setenv('DEEPSEEK_VERIFY_SSL','false')
     original = httpx.AsyncClient
     def handler(request):
-        assert str(request.url)=='https://vio.automotive-wan.com:446/v1/chat/completions'
+        assert str(request.url)=='https://vio.automotive-wan.com:446/chat/completions'
         assert 'authorization' not in request.headers
         return httpx.Response(200,text='data: {"choices":[{"delta":{"content":"ok"}}]}\n\ndata: [DONE]\n')
     def factory(**kwargs):
