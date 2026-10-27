@@ -57,7 +57,7 @@ export function RichMarkdown({ text }: { text: string }) {
       while (index < lines.length) {
         const current = lines[index]
         if (current.trim().startsWith(opening.repeat(minLength)) &&
-            current.trim().replaceAll(opening, '').trim() === '') { index++; break }
+            current.trim().split(opening).join('').trim() === '') { index++; break }
         code.push(current)
         index++
       }
