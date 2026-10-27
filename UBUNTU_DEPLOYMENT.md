@@ -101,7 +101,7 @@ bash ~/loong-ai-portal/current/deploy.sh stop
 - Compose 不识别 `format: raw`：需要 v2.30+，按你自己的维护流程升级；脚本不自动安装/升级。
 - 启动/健康失败：执行 logs；端口冲突需更换端口。修正后重试。没有已安装版本时，`docker logs loong-ai-portal-portal-1` 可查看首次启动错误。
 - 不要把 `docker compose config` 的完整输出发给别人，它可能含密钥；部署脚本只用 `config --quiet` 验证。Docker 权限拥有者可查看容器环境，因此仅在可信服务器使用。
-- 对话只在浏览器内存中，刷新/关闭会清空；服务中心导航保留当前对话。Presentation 是模拟故事板，不能生成 PPTX。无 SSO、下游 API 集成或企业数据访问。
+- 新增浏览器本地对话历史：刷新页面后可恢复最近会话（最多 20 个对话，每个最近 40 条消息），可重命名、删除与清空。数据只存于当前浏览器 Origin 的 localStorage，不跨设备/浏览器/域名同步；清除站点数据后无法恢复。请勿在共用浏览器中保存敏感对话。Presentation 是模拟故事板，不能生成 PPTX。无 SSO、服务器端历史库、下游 API 集成或企业数据访问。
 - 部署证据和未运行项见 `docs/UBUNTU_ACCEPTANCE.md`。环境是 Linux Docker，不等同于已访问或验收你的 Ubuntu 主机。
 
 ## 构建环境说明

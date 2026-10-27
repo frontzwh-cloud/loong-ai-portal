@@ -9,7 +9,7 @@ The user corrected the target to an Ubuntu server with Docker. Earlier Windows p
 The default demo makes no AI requests and visibly labels its canned replies. For real chat, configure an approved HTTPS OpenAI-compatible provider, exact model ID and API key in `backend/.env`, set `PORTAL_DEMO_MODE=false`, and restart. No provider, account or downstream service has been live-verified. Application links can be configured in the same file without rebuilding.
 
 - Streaming answers, provider-returned reasoning, cancellation and visible failure messages.
-- Bounded in-memory conversations; navigation preserves the conversation, refresh clears it.
+- Bounded conversations with browser-local history (up to 20 recent chats; 40 messages per chat); refresh restores history in the same browser origin. No login, server synchronization or backup.
 - Searchable AI applications, office tools and download links; absent or invalid links are disabled.
 - Presentation Canvas is explicitly simulated, with no PPTX generation or real integration.
 - Backend serves the compiled UI on loopback. Secrets stay server-side. TLS verification is enabled by default; it can be explicitly disabled only for the approved internal host `vio.automotive-wan.com`.
@@ -59,3 +59,5 @@ node scripts/browser-check.mjs
 `CHROMIUM_PATH` overrides the browser check's `/usr/bin/chromium`; `PORTAL_TEST_URL` overrides the loopback URL. Playwright is a dev dependency. Package contents are explicitly allowlisted; local `.env` is never copied. Backend versions are pinned in `backend/requirements.lock`, frontend versions in `frontend/package-lock.json`. Package SHA256 and component hashes are produced under `artifacts/`.
 
 Project authority: [manifest](PROJECT_MANIFEST.md), [overlay](docs/PROJECT_OVERLAY.md), [current state](docs/PROJECT_STATE.md). Earlier UI scope: [prototype notes](docs/UI_PROTOTYPE_20261024.md).
+
+Browser-local conversation history is described in [the history guide](docs/CONVERSATION_HISTORY.md). Using a different hostname, address, port, browser profile or device creates a different local history. Do not use a shared browser for confidential chats.

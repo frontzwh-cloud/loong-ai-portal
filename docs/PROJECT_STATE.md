@@ -1,7 +1,7 @@
 # LOONG AI Portal — Current State
 
-UPDATED = 2026-10-25
-STATUS = UBUNTU_DOCKER_CANDIDATE_PENDING_OWNER_ACCEPTANCE
+UPDATED = 2026-10-27
+STATUS = DRAFT_HISTORY_CANDIDATE_PENDING_OWNER_ACCEPTANCE
 
 ## Objective and implementation
 
@@ -15,7 +15,13 @@ Current local candidate includes:
 - Built frontend served by FastAPI on loopback, local launcher, Windows setup packaging and Chinese deployment guide.
 - TLS certificate verification restored; typed/bounded request validation; no raw upstream error bodies exposed.
 
-Presentation Canvas and keyword recommendations remain labeled demonstrations. No PPTX generation, downstream API integration, SSO, enterprise data ingestion or durable chat history.
+Presentation Canvas and keyword recommendations remain labeled demonstrations. No PPTX generation, downstream API integration, SSO, enterprise data ingestion or **server-side** conversation history.
+
+## Browser-local history extension (2026-10-27)
+
+The user explicitly requested conversation history after the first deployment candidate. Draft PR #3 now includes browser-local conversation list, reload restoration, rename, deletion, and clear-all, without backend persistence or new dependencies. Data is bounded (20 conversations, 40 messages / 64,000 characters per conversation), stored only in the same browser origin, and never synchronized between devices or users. Local browser storage is not suitable for shared-device confidential transcripts. No approval for authenticated/server-side history is implied.
+
+Implementation and regression-test sources are in `frontend/src/history.ts`, `ConversationHistory.tsx` and adjacent tests. Testing and actual deployed-browser acceptance for this new feature are still pending. The user reported that the Portal is reachable in their internal environment; the new branch code has not been deployed there by this change.
 
 ## Ubuntu deployment continuation
 
