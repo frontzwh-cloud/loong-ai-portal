@@ -1,7 +1,7 @@
 # LOONG AI Portal — Current State
 
 UPDATED = 2026-10-27
-STATUS = DRAFT_ADMIN_LINKS_CANDIDATE_PENDING_OWNER_ACCEPTANCE
+STATUS = DEPLOYED_HEALTHY_PENDING_BROWSER_AND_OWNER_ACCEPTANCE
 
 ## Objective and implementation
 
@@ -42,3 +42,24 @@ User requested a small admin interface for existing AI/workplace application URL
 ## Address-only admin separation — 2026-10-27
 
 User explicitly requested URL-only management, without another application password. Candidate replaces the token-protected same-process editor with separate admin FastAPI/Compose service on host 127.0.0.1:8001 (default). Public app no longer has mutation routes or admin navigation. Administrators open the separate /admin URL over SSH forwarding; anybody with access to that local-only port is an admin. The shared app-links data file remains authoritative for configured public navigation URLs. Real-server testing and acceptance are pending. See docs/APP_LINK_ADMIN.md.
+
+## Ubuntu deployment evidence — 2026-10-27
+
+EVIDENCE_SOURCE = USER_SUPPLIED_UBUNTU_TERMINAL_OUTPUT
+DEPLOYMENT_SOURCE_COMMIT = ce073dee94d9d2915f440f07f5ff334001c4beb8
+DEPLOYMENT_IMAGE_TAG = 0.1.0-rc.2-7e5a9db92252
+DEPLOYMENT_RESULT = BASIC_HEALTH_PASS
+OWNER_PRODUCT_ACCEPTANCE = PENDING
+MAIN_MERGE = NOT_DONE
+
+The user supplied target-host console output confirming the Docker build and Compose update:
+- Portal container reported healthy, host binding `127.0.0.1:8000->8000/tcp`.
+- Separate admin container reported healthy, host binding `127.0.0.1:8001->8000/tcp`.
+- Portal `GET /api/health` returned `{"status":"ok","app":"loong-ai-portal","mode":"live","deepseek":"configured"}`.
+- Admin `GET /api/health` returned `{"status":"ok","app":"loong-ai-portal-admin"}`.
+- Deploy command printed `Healthy release: 0.1.0-rc.2-7e5a9db92252` and `DEPLOY_BASIC_STATUS=PASS`.
+- Configuration remains in the existing external server-local shared directory.
+
+These are operator-supplied runtime facts, not independently probed from ChatGPT. They establish successful **basic deployment and container health**, not live model response, end-to-end application link editing, history restoration, employee-facing reverse proxy operation, access-control penetration testing or formal user acceptance.
+
+Next acceptance gate: manually verify employee page, non-sensitive real chat, browser-local history reload, SSH-forwarded admin page and saved link reflected in public `/api/config`. Public Portal should not permit app-link writes. Keep Draft PR #3 until acceptance; deployment did not merge main or publish a GitHub Release.
