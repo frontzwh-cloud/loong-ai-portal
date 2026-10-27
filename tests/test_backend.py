@@ -130,6 +130,8 @@ def test_admin_rejects_remote_and_wrong_credentials(admin_registry):
         (admin_headers(token="incorrect-token"), 401),
         (admin_headers(host="loongai"), 403),
         (admin_headers(origin="http://loongai"), 403),
+        (admin_headers(origin="http://localhost:bad"), 403),
+        (admin_headers(host="localhost:bad"), 403),
     ]:
         valid = {key: "" for key in main.LINK_ENV}
         assert client.put("/api/admin/links", headers=headers, json={"links": valid}).status_code == code
