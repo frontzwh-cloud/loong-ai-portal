@@ -37,7 +37,7 @@ Local Docker build/start and recovery checks are execution evidence, not final a
 
 ## Application link management — 2026-10-27
 
-User requested a small admin interface for existing AI/workplace application URLs, especially Meeting Assistant download PAGE. Candidate implements a fixed allowlist editor, protected backend and server-local persistent app-links JSON. Public URL navigation remains read-only. No SSO, model credentials, app business integration, production merge or real-server deployment was authorized. See APP_LINK_ADMIN.md for security boundary and pending acceptance.
+User requested a small admin interface for existing AI/workplace application URLs, especially Meeting Assistant download PAGE. Candidate implements a fixed allowlist editor and server-local persistent app-links JSON. Public URL navigation remains read-only. The latest version isolates the write API in a separate loopback-only admin service. No SSO, model credentials, app business integration, production merge or real-server deployment was authorized. See APP_LINK_ADMIN.md for security boundary and pending acceptance.
 
 ## Address-only admin separation — 2026-10-27
 
