@@ -12,7 +12,7 @@ WORKDIR /app
 COPY backend/requirements.lock ./backend/requirements.lock
 RUN --mount=type=secret,id=build_ca \
     if [ -s /run/secrets/build_ca ]; then export PIP_CERT=/run/secrets/build_ca; fi; pip install --no-cache-dir -r backend/requirements.lock
-COPY backend/main.py backend/link_registry.py ./backend/
+COPY backend/main.py backend/admin.py backend/link_registry.py ./backend/
 COPY --from=frontend /build/dist ./frontend/dist
 RUN chmod -R a=rX /app
 USER 10001:10001

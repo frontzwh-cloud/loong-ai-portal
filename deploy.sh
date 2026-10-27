@@ -43,11 +43,11 @@ activate() {
   local target=$1 previous
   previous=$(current)
   compose "$target" config --quiet || fail 'Invalid Compose/configuration. Compose 2.30+ is required; config files were preserved.'
-  if ! compose "$target" up -d --no-build --wait --wait-timeout "$WAIT_TIMEOUT"; then
+  if ! compose "$target" up -d --no-build --remove-orphans --wait --wait-timeout "$WAIT_TIMEOUT"; then
     echo 'Startup/health failed. Configuration and release files are preserved.' >&2
     if [[ -n "$previous" && -f "$previous/compose.yaml" && "$previous" != "$target" ]]; then
       echo "Restoring previous image: $(basename -- "$previous")" >&2
-      compose "$previous" up -d --no-build --wait --wait-timeout "$WAIT_TIMEOUT" || echo 'Automatic recovery failed; inspect docker compose logs and local configuration.' >&2
+      compose "$previous" up -d --no-build --remove-orphans --wait --wait-timeout "$WAIT_TIMEOUT" || echo 'Automatic recovery failed; inspect docker compose logs and local configuration.' >&2
     fi
     return 1
   fi
@@ -60,14 +60,14 @@ activate() {
 }
 case "$COMMAND" in
   install|update)
-    for file in Dockerfile compose.yaml VERSION backend/main.py backend/link_registry.py frontend/package-lock.json frontend/vitest.config.ts; do
+    for file in Dockerfile compose.yaml VERSION backend/main.py backend/admin.py backend/link_registry.py frontend/package-lock.json frontend/vitest.config.ts; do
       [[ -f "$SOURCE/$file" ]] || fail "Incomplete source package: missing $file"
     done
     stage=$(mktemp -d "$ROOT/releases/.staging.XXXXXXXX")
     trap '[[ -z "${stage:-}" ]] || rm -rf -- "$stage"' EXIT
     mkdir -p "$stage/backend" "$stage/frontend" "$stage/deploy"
     cp "$SOURCE/"{Dockerfile,.dockerignore,compose.yaml,VERSION,deploy.sh} "$stage/"
-    cp "$SOURCE/backend/"{main.py,link_registry.py,requirements.lock} "$stage/backend/"
+    cp "$SOURCE/backend/"{main.py,admin.py,link_registry.py,requirements.lock} "$stage/backend/"
     # Keep Vitest/jsdom configuration in the staged build, not only in the source checkout.
     cp "$SOURCE/frontend/"{package.json,package-lock.json,tsconfig.json,vite.config.ts,vitest.config.ts,index.html,collect-licenses.cjs} "$stage/frontend/"
     cp -R "$SOURCE/frontend/src" "$SOURCE/frontend/public" "$stage/frontend/"

@@ -9,9 +9,36 @@ services:
     environment:
       PORTAL_LINKS_FILE: /data/app-links.json
     volumes:
-      - ${PORTAL_LINKS_DIR:?Use deploy.sh for persistent app links}:/data:rw
+      - ${PORTAL_LINKS_DIR:?Use deploy.sh for persistent app links}:/data:ro
     ports:
       - "${PORTAL_BIND:-127.0.0.1}:${PORTAL_PORT:-8000}:8000"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  admin:
+    image: loong-ai-portal:${PORTAL_RELEASE:?Use deploy.sh to select a release}
+    command: ["python", "-m", "uvicorn", "backend.admin:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]
+    env_file:
+      - path: ${PORTAL_CONFIG:?Use deploy.sh to select server configuration}
+        format: raw
+    environment:
+      PORTAL_LINKS_FILE: /data/app-links.json
+    volumes:
+      - ${PORTAL_LINKS_DIR:?Use deploy.sh for persistent app links}:/data:rw
+    ports:
+      - "127.0.0.1:${PORTAL_ADMIN_PORT:-8001}:8000"
     restart: unless-stopped
     init: true
     read_only: true
