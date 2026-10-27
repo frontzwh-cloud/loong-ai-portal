@@ -1,5 +1,4 @@
 """Public navigation destinations: fixed IDs, validated URLs, admin-only durable overrides."""
-import hmac
 import json
 import os
 import tempfile
@@ -7,7 +6,7 @@ from pathlib import Path
 from threading import Lock
 from urllib.parse import urlsplit
 
-from fastapi import HTTPException, Request
+from fastapi import HTTPException
 
 LINK_ENV = {
     "gemba": "GEMBA_URL",
@@ -62,38 +61,6 @@ def public_links() -> dict[str, str]:
     result.update(overrides())
     return result
 
-
-def require_local_admin(request: Request) -> None:
-    """Admin writes are allowed only via localhost browser + secret (typically SSH forwarding).
-
-    Host/Origin are not authentication and may be spoofed by non-browser clients;
-    the high-entropy bearer secret is mandatory independently.
-    """
-    token = os.getenv("PORTAL_ADMIN_TOKEN", "")
-    if len(token) < 32:
-        raise HTTPException(503, "管理员配置未启用，请在服务器配置 PORTAL_ADMIN_TOKEN。")
-    host = request.headers.get("host", "")
-    origin = request.headers.get("origin", "")
-    try:
-        host_url = urlsplit("http://" + host)
-        host_name = host_url.hostname
-        _ = host_url.port
-        origin_url = urlsplit(origin)
-        origin_name = origin_url.hostname
-        origin_port = origin_url.port
-    except ValueError:
-        raise HTTPException(403, "仅允许通过本机安全通道使用管理接口。")
-    if host_name not in ("127.0.0.1", "localhost"):
-        raise HTTPException(403, "请通过 SSH 转发的 localhost 地址访问管理界面。")
-    # Same-origin GET requests do not always carry an Origin header; PUT requests do.
-    # A bearer secret is still mandatory, so Host/Origin checking is defense in depth.
-    if request.method != "GET" or origin:
-        if origin_url.scheme != "http" or origin_name not in ("127.0.0.1", "localhost") or origin_port not in (8000, 5173):
-            raise HTTPException(403, "管理界面来源不受支持。")
-    bearer = request.headers.get("authorization", "")
-    supplied = bearer[7:] if bearer.startswith("Bearer ") else ""
-    if not supplied or not hmac.compare_digest(token, supplied):
-        raise HTTPException(401, "管理员密钥无效。")
 
 
 def save_links(new_links: dict[str, str]) -> dict[str, str]:
