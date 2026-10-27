@@ -80,10 +80,13 @@ def require_local_admin(request: Request) -> None:
         origin_name = origin_url.hostname
     except ValueError:
         raise HTTPException(403, "仅允许通过本机安全通道使用管理接口。")
-    if host_name not in ("127.0.0.1", "localhost") or origin_url.scheme != "http" or origin_name not in ("127.0.0.1", "localhost"):
+    if host_name not in ("127.0.0.1", "localhost"):
         raise HTTPException(403, "请通过 SSH 转发的 localhost 地址访问管理界面。")
-    if origin_url.port not in (8000, 5173):
-        raise HTTPException(403, "管理界面来源不受支持。")
+    # Same-origin GET requests do not always carry an Origin header; PUT requests do.
+    # A bearer secret is still mandatory, so Host/Origin checking is defense in depth.
+    if request.method != "GET" or origin:
+        if origin_url.scheme != "http" or origin_name not in ("127.0.0.1", "localhost") or origin_url.port not in (8000, 5173):
+            raise HTTPException(403, "管理界面来源不受支持。")
     bearer = request.headers.get("authorization", "")
     supplied = bearer[7:] if bearer.startswith("Bearer ") else ""
     if not supplied or not hmac.compare_digest(token, supplied):
