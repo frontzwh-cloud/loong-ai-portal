@@ -4,7 +4,7 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN --mount=type=secret,id=build_ca \
     if [ -s /run/secrets/build_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/build_ca; fi; npm ci
 COPY frontend/ ./
-RUN npm run build && node collect-licenses.cjs
+RUN npm run build && npm test && node collect-licenses.cjs
 
 FROM python:3.13.17-slim-bookworm@sha256:e32be0e55814a08977501ca863271d9bd02443710db8f2afaf8372e2c4508530
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
