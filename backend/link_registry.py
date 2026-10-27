@@ -75,9 +75,12 @@ def require_local_admin(request: Request) -> None:
     host = request.headers.get("host", "")
     origin = request.headers.get("origin", "")
     try:
-        host_name = urlsplit("http://" + host).hostname
+        host_url = urlsplit("http://" + host)
+        host_name = host_url.hostname
+        _ = host_url.port
         origin_url = urlsplit(origin)
         origin_name = origin_url.hostname
+        origin_port = origin_url.port
     except ValueError:
         raise HTTPException(403, "仅允许通过本机安全通道使用管理接口。")
     if host_name not in ("127.0.0.1", "localhost"):
@@ -85,7 +88,7 @@ def require_local_admin(request: Request) -> None:
     # Same-origin GET requests do not always carry an Origin header; PUT requests do.
     # A bearer secret is still mandatory, so Host/Origin checking is defense in depth.
     if request.method != "GET" or origin:
-        if origin_url.scheme != "http" or origin_name not in ("127.0.0.1", "localhost") or origin_url.port not in (8000, 5173):
+        if origin_url.scheme != "http" or origin_name not in ("127.0.0.1", "localhost") or origin_port not in (8000, 5173):
             raise HTTPException(403, "管理界面来源不受支持。")
     bearer = request.headers.get("authorization", "")
     supplied = bearer[7:] if bearer.startswith("Bearer ") else ""
