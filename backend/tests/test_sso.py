@@ -46,20 +46,39 @@ class SsoTests(unittest.TestCase):
             asyncio.run(sso.verify(sso.VerifyRequest(
                 app_id="gemba", secret="0123456789abcdef0123456789abcdef", code="expired")))
 
-    def test_invalid_workflow_response_denied(self):
-        class FakeResponse:
-            def raise_for_status(self): pass
-            def json(self): return {"uid": "different", "active": True}
+    def test_workflow_query_parameterized_and_validated(self):
+        from unittest.mock import MagicMock
+        fake_connection = MagicMock()
+        fake_cursor = fake_connection.__enter__.return_value.cursor.return_value.__enter__.return_value
+        fake_cursor.fetchone.side_effect = [
+            {"uid": "u123", "name": "Test User", "department": "IT", "active": 1}, None
+        ]
+        with patch.dict(os.environ, {
+            "WORKFLOW_DB_HOST": "db.internal", "WORKFLOW_DB_NAME": "Workflow",
+            "WORKFLOW_DB_USER": "readonly", "WORKFLOW_DB_PASSWORD": "fake",
+            "WORKFLOW_USER_SQL": "SELECT UID AS uid, Name AS name, Department AS department, Active AS active FROM dbo.Users WHERE UID = %s"
+        }):
+            with patch("pytds.connect", return_value=fake_connection) as connect:
+                user = sso._workflow_query("u123")
+                self.assertEqual(user["uid"], "u123")
+                self.assertEqual(user["name"], "Test User")
+                fake_cursor.execute.assert_called_once()
+                self.assertEqual(fake_cursor.execute.call_args.args[1], ("u123",))
+                self.assertTrue(connect.call_args.kwargs["readonly"])
 
-        class FakeClient:
-            async def __aenter__(self): return self
-            async def __aexit__(self, *_): pass
-            async def get(self, *_): return FakeResponse()
-
-        with patch.dict(os.environ, {"WORKFLOW_USER_URL": "https://workflow.example.internal/user?uid={uid}"}):
-            with patch.object(sso.httpx, "AsyncClient", return_value=FakeClient()):
+    def test_sql_duplicate_user_denied(self):
+        from unittest.mock import MagicMock
+        fake_connection = MagicMock()
+        cursor = fake_connection.__enter__.return_value.cursor.return_value.__enter__.return_value
+        cursor.fetchone.side_effect = [{"uid": "u123", "active": 1}, {"uid": "u123", "active": 1}]
+        with patch.dict(os.environ, {
+            "WORKFLOW_DB_HOST": "db.internal", "WORKFLOW_DB_NAME": "Workflow",
+            "WORKFLOW_DB_USER": "readonly", "WORKFLOW_DB_PASSWORD": "fake",
+            "WORKFLOW_USER_SQL": "SELECT UID AS uid, Active AS active FROM dbo.Users WHERE UID = %s"
+        }):
+            with patch("pytds.connect", return_value=fake_connection):
                 with self.assertRaises(HTTPException):
-                    asyncio.run(sso._workflow_user("u123"))
+                    sso._workflow_query("u123")
 
     def test_cas_blank_account_denied(self):
         class FakeResponse:
