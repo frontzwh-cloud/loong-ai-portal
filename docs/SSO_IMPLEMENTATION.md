@@ -15,7 +15,7 @@ STATUS = IMPLEMENTED_IN_BRANCH_NOT_INTEGRATION_TESTED
 1. Browser requests `GET /sso/login` or `GET /sso/login?app_id=gemba`.
 2. Portal redirects browser to the corporate CAS login URL with its **exact** callback URL encoded in the `service` parameter.
 3. CAS redirects to `GET /sso/callback?ticket=...`.
-4. Portal backend calls `valid_ticket`, reads UTF-8 text, looks up Workflow by UID and issues its Portal session cookie.
+4. Portal backend calls `valid_ticket`, reads UTF-8 text, queries Workflow SQL Server using a read-only SQL account and parameterized UID and issues its Portal session cookie.
 5. For a registered downstream application, Portal issues a **60-second, one-time code** and redirects to the registered HTTPS callback.
 6. Downstream **server** sends `POST /sso/verify` with JSON `{app_id,secret,code}`, then creates its own session from the returned user identity. Codes are consumed atomically and cannot be used for another app.
 
@@ -27,12 +27,18 @@ The app's `secret` belongs only on the downstream server, never in browser JavaS
 SSO_ENABLED=true
 PORTAL_PUBLIC_URL=https://portal.example.internal
 CAS_BASE_URL=http://W3UY084VMA:9099
-WORKFLOW_USER_URL=https://workflow.example.internal/api/users/{uid}
+WORKFLOW_DB_HOST=workflow-sql.internal
+WORKFLOW_DB_PORT=1433
+WORKFLOW_DB_NAME=Workflow
+WORKFLOW_DB_USER=portal_readonly
+WORKFLOW_DB_PASSWORD=REPLACE_WITH_SERVER_LOCAL_SECRET
+WORKFLOW_DB_CA_FILE=
+WORKFLOW_USER_SQL=SELECT UID AS uid, FullName AS name, Department AS department, IsActive AS active FROM dbo.Employee WHERE UID = %s
 SSO_APPS_JSON={"gemba":{"callback":"https://gemba.example.internal/auth/callback","secret":"REPLACE_WITH_RANDOM_SECRET_AT_LEAST_32_CHARACTERS"}}
 SSO_ALLOW_INSECURE_LOCAL=false
 ```
 
-**The Workflow URL above is illustrative, NOT a confirmed endpoint.** Obtain the actual internal Workflow query interface and adapt its response shape as necessary. The current adapter expects JSON `{ "uid": "...", "name": "...", "department": "...", "active": true }`; it rejects mismatching UIDs. CAS/Workflow connectivity and actual response contracts are not yet tested. The listed CAS hostname is internal HTTP; server-to-CAS traffic must remain on an appropriately protected network until the enterprise supplies a TLS endpoint.
+**The Workflow URL above is illustrative, NOT a confirmed endpoint.** Obtain the actual internal Workflow query interface and adapt its response shape as necessary. The current adapter expects JSON `uid`, `name`, `department`, `active`; it rejects missing, duplicate, inactive or mismatched UIDs. CAS/Workflow SQL connectivity, TLS compatibility and actual schema have not yet been tested. Use a DB account granted only SELECT on the required Workflow view; revoke any write or privileged permissions. The listed CAS hostname is internal HTTP; server-to-CAS traffic must remain on an appropriately protected network until the enterprise supplies a TLS endpoint.
 
 `PORTAL_PUBLIC_URL` must be the externally reachable HTTPS origin after reverse proxying, matching the registered CAS service callback exactly. Deploy with the existing `portal.env` (server-local, never committed). When disabled, the Portal remains in its pre-SSO compatibility mode; **do not claim employee authentication in that mode**.
 
@@ -48,7 +54,7 @@ SSO_ALLOW_INSECURE_LOCAL=false
 ## Acceptance checks (pending actual runtime verification)
 
 1. Browser login: CAS ticket → correct Workflow UID → Portal session.
-2. Invalid/expired/replayed CAS ticket, blank CAS account, inactive or unmatched Workflow user: login denied.
+2. Invalid/expired/replayed CAS ticket, blank CAS account, inactive, duplicated or unmatched Workflow user: login denied.
 3. Application code: valid once, invalid after expiry, unusable from any other app.
 4. Session expiry/restart and logout cannot leave `/api/chat` authorized.
 5. HTTPS reverse proxy returns correct cookie attributes and the CAS callback matches service registration.
