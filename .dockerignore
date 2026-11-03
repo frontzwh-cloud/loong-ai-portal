@@ -1,0 +1,15 @@
+**/.env
+**/.env.*
+**/node_modules
+**/__pycache__
+**/.venv
+**/dist
+.git
+.agents
+artifacts
+tests
+docs
+deploy
+*.zip
+*.bundle
+*.log
