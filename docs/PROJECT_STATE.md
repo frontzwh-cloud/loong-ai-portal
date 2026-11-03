@@ -63,3 +63,7 @@ The user supplied target-host console output confirming the Docker build and Com
 These are operator-supplied runtime facts, not independently probed from ChatGPT. They establish successful **basic deployment and container health**, not live model response, end-to-end application link editing, history restoration, employee-facing reverse proxy operation, access-control penetration testing or formal user acceptance.
 
 Next acceptance gate: manually verify employee page, non-sensitive real chat, browser-local history reload, SSH-forwarded admin page and saved link reflected in public `/api/config`. Public Portal should not permit app-link writes. Keep Draft PR #3 until acceptance; deployment did not merge main or publish a GitHub Release.
+
+## Enterprise CAS / Workflow SSO candidate — 2026-11-03
+
+User confirmed minimal SSO model: corporate CAS authenticates, CAS accountname equals Workflow UID, Workflow is the standard user-information authority, and Portal brokers one-time codes to registered downstream AI applications. Implemented on the existing prototype branch, **not merged or deployed**. See `docs/SSO_IMPLEMENTATION.md` for contract, configuration, security constraints and acceptance checks. Authentication changes require integration verification before employee rollout. The Workflow query endpoint/response adapter remains unconfirmed; `SSO_ENABLED=false` preserves current deployment behavior until explicitly configured. Branch tests exist but have not been executed against the Ubuntu/CAS/Workflow environment.
