@@ -7,7 +7,6 @@ import os
 import re
 import secrets
 import time
-from dataclasses import dataclass
 from urllib.parse import urlencode
 
 import httpx
@@ -84,24 +83,51 @@ def current_user(request: Request) -> dict | None:
     return record[1]
 
 
-async def _workflow_user(uid: str) -> dict:
-    template = _setting("WORKFLOW_USER_URL")
-    if template.count("{uid}") != 1 or not template.startswith(("http://", "https://")):
-        raise HTTPException(503, "Workflow URL must contain one {uid} placeholder")
-    from urllib.parse import quote
-    url = template.replace("{uid}", quote(uid, safe=""))
+def _workflow_query(uid: str) -> dict:
+    """Synchronous SQL authentication. Run from a thread to avoid blocking FastAPI."""
+    import pytds
+
+    # SQL lives in server-side configuration and must return one row per UID
+    # with the aliases uid, name, department, active.
+    query = _setting("WORKFLOW_USER_SQL").strip()
+    if (not re.match(r"^SELECT\b", query, flags=re.IGNORECASE) or
+        query.count("%s") != 1 or ";" in query or "--" in query or "/*" in query):
+        raise HTTPException(503, "Workflow query must be one parameterized SELECT")
     try:
-        async with httpx.AsyncClient(timeout=5, follow_redirects=False) as client:
-            response = await client.get(url)
-            response.raise_for_status()
-            user = response.json()
-    except (httpx.HTTPError, ValueError):
-        raise HTTPException(503, "Workflow lookup unavailable")
-    # The Workflow adapter contract is intentionally strict. No synthetic identity.
-    if not isinstance(user, dict) or user.get("uid") != uid or user.get("active", True) is not True:
-        raise HTTPException(403, "User not found or inactive in Workflow")
-    return {"uid": uid, "name": str(user.get("name", ""))[:120],
-            "department": str(user.get("department", ""))[:120]}
+        with pytds.connect(
+            dsn=_setting("WORKFLOW_DB_HOST"),
+            port=int(os.getenv("WORKFLOW_DB_PORT", "1433")),
+            database=_setting("WORKFLOW_DB_NAME"),
+            user=_setting("WORKFLOW_DB_USER"),
+            password=_setting("WORKFLOW_DB_PASSWORD"),
+            login_timeout=5,
+            timeout=5,
+            as_dict=True,
+            readonly=True,
+            autocommit=True,
+            cafile=os.getenv("WORKFLOW_DB_CA_FILE") or None,
+            validate_host=True,
+        ) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query, (uid,))
+                first = cursor.fetchone()
+                second = cursor.fetchone()
+    except HTTPException:
+        raise
+    except (Exception,) as exc:
+        # Never leak SQL credentials or server error details to browsers.
+        raise HTTPException(503, "Workflow SQL Server lookup unavailable") from exc
+
+    if not first or second is not None:
+        raise HTTPException(403, "Workflow user missing or not unique")
+    if str(first.get("uid", "")) != uid or first.get("active") not in (1, True):
+        raise HTTPException(403, "Workflow user mismatch or inactive")
+    return {"uid": uid, "name": str(first.get("name") or "")[:120],
+            "department": str(first.get("department") or "")[:120]}
+
+
+async def _workflow_user(uid: str) -> dict:
+    return await asyncio.to_thread(_workflow_query, uid)
 
 
 async def _cas_account(ticket: str) -> str:
