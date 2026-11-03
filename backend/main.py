@@ -8,15 +8,17 @@ from urllib.parse import urlsplit
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from .sso import router as sso_router, current_user, enabled as sso_enabled
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / "backend" / ".env")
 app = FastAPI(title="LOONG AI Portal API")
+app.include_router(sso_router)
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
                    allow_credentials=False, allow_methods=["GET", "POST"], allow_headers=["Content-Type"])
 
@@ -163,7 +165,9 @@ async def config():
 
 
 @app.post("/api/chat")
-async def chat(request: ChatRequest):
+async def chat(request: ChatRequest, http_request: Request):
+    if sso_enabled() and current_user(http_request) is None:
+        raise HTTPException(401, "Login required")
     return StreamingResponse(stream_chat([m.model_dump() for m in request.messages]), media_type="application/x-ndjson",
                              headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
